@@ -1,0 +1,503 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+// ==============================
+// IDENTITY & ACCESS
+// ==============================
+
+model User {
+  id             String    @id @default(uuid())
+  email          String    @unique
+  passwordHash   String?
+  oauthProvider  String?
+  oauthId        String?
+  firstName      String?
+  lastName       String?
+  displayName    String?
+  role           Role      @default(USER)
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  profile              UserProfile?
+  subscriptions        UserSubscription[]
+  certifications       Certification[]
+  examAttempts         ExamAttempt[]
+  xpTransactions       XPTransaction[]
+  userBadges           UserBadge[]
+  ceRecords            CERecord[]
+  leadershipStatuses   LeadershipStatus[]
+  streak               UserStreak?
+  auditLogs            AuditLog[]
+  notificationPrefs    NotificationPreference?
+  inAppNotifications   InAppNotification[]
+
+  @@map("users")
+}
+
+enum Role {
+  USER
+  ADMIN
+  MODERATOR
+  CONTENT_ADMIN
+  CERTIFICATION_ADMIN
+  ANALYTICS_VIEWER
+}
+
+model UserProfile {
+  id                      String   @id @default(uuid())
+  userId                  String   @unique
+  preferredLanguage       String?  @default("en")
+  timezone                String?
+  ageBandFocus            String?
+  notificationPreferences Json?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("user_profiles")
+}
+
+// ==============================
+// SUBSCRIPTION & ENTITLEMENT
+// ==============================
+
+model SubscriptionPlan {
+  id                  String   @id @default(uuid())
+  planName            String
+  price               Float
+  currency            String   @default("USD")
+  billingInterval     BillingInterval
+  includesBlackBelt   Boolean  @default(false)
+  includesLeadership  Boolean  @default(false)
+  includesGlobal      Boolean  @default(false)
+  isActive            Boolean  @default(true)
+  stripePriceId       String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  subscriptions UserSubscription[]
+
+  @@map("subscription_plans")
+}
+
+enum BillingInterval {
+  MONTHLY
+  ANNUAL
+}
+
+model UserSubscription {
+  id                String             @id @default(uuid())
+  userId            String
+  planId            String
+  status            SubscriptionStatus @default(ACTIVE)
+  startDate         DateTime
+  endDate           DateTime?
+  stripeSubId       String?
+  stripeCustomerId  String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  user User             @relation(fields: [userId], references: [id])
+  plan SubscriptionPlan @relation(fields: [planId], references: [id])
+
+  @@map("user_subscriptions")
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELLED
+  EXPIRED
+  PAST_DUE
+}
+
+// ==============================
+// CONTENT SYSTEM
+// ==============================
+
+model Track {
+  id                   String          @id @default(uuid())
+  trackName            String
+  description          String?
+  ageBand              String?
+  curriculumVersion    String          @default("1.0")
+  expiryDurationMonths Int             @default(12)
+  renewalModelType     RenewalModel    @default(EXAM_ONLY)
+  isActive             Boolean         @default(false)
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+
+  belts          Belt[]
+  modules        Module[]
+  certifications Certification[]
+  questions      Question[]
+  ceRecords      CERecord[]
+
+  @@map("tracks")
+}
+
+enum RenewalModel {
+  EXAM_ONLY
+  CE_ONLY
+  HYBRID
+}
+
+model Belt {
+  id               String   @id @default(uuid())
+  trackId          String
+  beltLevel        String
+  orderIndex       Int
+  passingThreshold Float    @default(75.0)
+  expirable        Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  track          Track           @relation(fields: [trackId], references: [id])
+  modules        Module[]
+  certifications Certification[]
+  examAttempts   ExamAttempt[]
+  questions      Question[]
+  scenarios      Scenario[]
+
+  @@unique([trackId, beltLevel])
+  @@map("belts")
+}
+
+model Module {
+  id          String   @id @default(uuid())
+  trackId     String
+  beltId      String
+  moduleTitle String
+  description String?
+  isRequired  Boolean  @default(true)
+  xpValue     Int      @default(50)
+  ceEligible  Boolean  @default(false)
+  ceValue     Float    @default(0)
+  orderIndex  Int
+  isActive    Boolean  @default(true)
+  isFreePreview Boolean @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  track     Track      @relation(fields: [trackId], references: [id])
+  belt      Belt       @relation(fields: [beltId], references: [id])
+  lessons   Lesson[]
+  scenarios Scenario[]
+  ceRecords CERecord[]
+
+  @@map("modules")
+}
+
+model Lesson {
+  id                       String   @id @default(uuid())
+  moduleId                 String
+  lessonTitle              String
+  contentBody              String
+  reflectionPrompt         String?
+  estimatedDurationMinutes Int?
+  xpValue                  Int      @default(20)
+  versionNumber            String   @default("1.0")
+  isActive                 Boolean  @default(true)
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  module        Module          @relation(fields: [moduleId], references: [id])
+  xpTransactions XPTransaction[]
+
+  @@map("lessons")
+}
+
+model Scenario {
+  id                String   @id @default(uuid())
+  moduleId          String
+  beltId            String
+  narrativeText     String
+  complexityLevel   Int      @default(1)
+  xpValue           Int      @default(30)
+  isRequired        Boolean  @default(true)
+  versionNumber     String   @default("1.0")
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  module    Module             @relation(fields: [moduleId], references: [id])
+  belt      Belt               @relation(fields: [beltId], references: [id])
+  responses ScenarioResponse[]
+
+  @@map("scenarios")
+}
+
+model ScenarioResponse {
+  id              String   @id @default(uuid())
+  scenarioId      String
+  responseText    String
+  isOptimal       Boolean  @default(false)
+  scoreImpact     Float    @default(0)
+  explanationText String?
+  createdAt       DateTime @default(now())
+
+  scenario Scenario @relation(fields: [scenarioId], references: [id])
+
+  @@map("scenario_responses")
+}
+
+model Question {
+  id              String       @id @default(uuid())
+  trackId         String
+  beltId          String
+  questionText    String
+  questionType    QuestionType @default(MULTIPLE_CHOICE)
+  difficultyLevel Int          @default(1)
+  versionNumber   String       @default("1.0")
+  isActive        Boolean      @default(true)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  track   Track            @relation(fields: [trackId], references: [id])
+  belt    Belt             @relation(fields: [beltId], references: [id])
+  options QuestionOption[]
+
+  @@map("questions")
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  MULTI_SELECT
+  SCENARIO_INTEGRATED
+}
+
+model QuestionOption {
+  id              String   @id @default(uuid())
+  questionId      String
+  optionText      String
+  isCorrect       Boolean  @default(false)
+  explanationText String?
+  createdAt       DateTime @default(now())
+
+  question Question @relation(fields: [questionId], references: [id])
+
+  @@map("question_options")
+}
+
+// ==============================
+// CERTIFICATION ENGINE
+// ==============================
+
+model Certification {
+  id                      String              @id @default(uuid())
+  userId                  String
+  trackId                 String
+  beltId                  String
+  status                  CertificationStatus @default(NOT_STARTED)
+  issueDate               DateTime?
+  expiryDate              DateTime?
+  curriculumVersionAtIssue String?
+  verificationToken       String?             @unique
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+
+  user   User  @relation(fields: [userId], references: [id])
+  track  Track @relation(fields: [trackId], references: [id])
+  belt   Belt  @relation(fields: [beltId], references: [id])
+  events CertificationEvent[]
+
+  @@unique([userId, trackId, beltId])
+  @@map("certifications")
+}
+
+enum CertificationStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  ACTIVE
+  EXPIRED
+  SUSPENDED
+  REVOKED
+}
+
+model CertificationEvent {
+  id              String   @id @default(uuid())
+  certificationId String
+  eventType       String
+  previousStatus  String?
+  newStatus       String
+  reasonCode      String?
+  performedBy     String?
+  timestamp       DateTime @default(now())
+
+  certification Certification @relation(fields: [certificationId], references: [id])
+
+  @@map("certification_events")
+}
+
+model ExamAttempt {
+  id              String   @id @default(uuid())
+  userId          String
+  trackId         String
+  beltId          String
+  scorePercentage Float
+  passed          Boolean  @default(false)
+  attemptNumber   Int
+  timeTakenSeconds Int?
+  createdAt       DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+  belt Belt @relation(fields: [beltId], references: [id])
+
+  @@map("exam_attempts")
+}
+
+// ==============================
+// GAMIFICATION
+// ==============================
+
+model XPTransaction {
+  id         String     @id @default(uuid())
+  userId     String
+  sourceType XPSource
+  sourceId   String
+  xpAmount   Int
+  createdAt  DateTime   @default(now())
+
+  user   User    @relation(fields: [userId], references: [id])
+  lesson Lesson? @relation(fields: [sourceId], references: [id], map: "xp_lesson_fk")
+
+  @@map("xp_transactions")
+}
+
+enum XPSource {
+  LESSON
+  SCENARIO
+  EXAM
+  STREAK
+  CE
+}
+
+model UserStreak {
+  userId                   String   @id
+  currentStreakCount        Int      @default(0)
+  longestStreak            Int      @default(0)
+  lastQualifyingActivityDate DateTime?
+  updatedAt                DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("user_streaks")
+}
+
+model Badge {
+  id           String   @id @default(uuid())
+  badgeName    String
+  description  String?
+  triggerEvent String
+  isPublic     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  userBadges UserBadge[]
+
+  @@map("badges")
+}
+
+model UserBadge {
+  userId    String
+  badgeId   String
+  earnedDate DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id])
+  badge Badge @relation(fields: [badgeId], references: [id])
+
+  @@id([userId, badgeId])
+  @@map("user_badges")
+}
+
+// ==============================
+// CONTINUING EDUCATION
+// ==============================
+
+model CERecord {
+  id           String   @id @default(uuid())
+  userId       String
+  trackId      String
+  moduleId     String
+  creditsEarned Float
+  earnedDate   DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id])
+  track  Track  @relation(fields: [trackId], references: [id])
+  module Module @relation(fields: [moduleId], references: [id])
+
+  @@map("ce_records")
+}
+
+// ==============================
+// LEADERSHIP
+// ==============================
+
+model LeadershipStatus {
+  id              String   @id @default(uuid())
+  userId          String
+  trackId         String?
+  isActive        Boolean  @default(false)
+  activatedDate   DateTime?
+  deactivatedDate DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("leadership_statuses")
+}
+
+// ==============================
+// AUDIT & GOVERNANCE
+// ==============================
+
+model AuditLog {
+  id            String   @id @default(uuid())
+  actorId       String?
+  actorRole     String?
+  actionType    String
+  entityType    String
+  entityId      String
+  previousValue Json?
+  newValue      Json?
+  timestamp     DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id])
+
+  @@map("audit_logs")
+}
+
+// ==============================
+// NOTIFICATIONS
+// ==============================
+
+model NotificationPreference {
+  userId                   String  @id
+  receiveMarketingEmails   Boolean @default(false)
+  receiveEngagementEmails  Boolean @default(true)
+  receiveInAppNotifications Boolean @default(true)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("notification_preferences")
+}
+
+model InAppNotification {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("in_app_notifications")
+}
