@@ -13,13 +13,15 @@
     "@auth/prisma-adapter": "^2.11.1",
     "@prisma/adapter-neon": "^7.6.0",
     "@prisma/client": "^7.6.0",
+    "@stripe/stripe-js": "^9.0.1",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.3.1",
     "next": "16.2.1",
     "next-auth": "5.0.0-beta.30",
     "prisma": "^7.6.0",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "stripe": "^21.0.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -31,11 +33,13 @@
     "eslint-config-next": "16.2.1",
     "tailwindcss": "^4",
     "typescript": "^5"
-  }
-  ,
-"pnpm": {
+  },
   "overrides": {
     "@auth/core": "0.41.1"
+  },
+  "pnpm": {
+    "overrides": {
+      "@auth/core": "0.41.1"
+    }
   }
- }
 }
