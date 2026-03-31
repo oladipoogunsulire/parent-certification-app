@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import Link from "next/link"
+import DeleteButton from "@/app/components/DeleteButton"
 
 export default async function AdminTracksPage() {
   const tracks = await prisma.track.findMany({
@@ -65,12 +66,21 @@ export default async function AdminTracksPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <Link
-                      href={`/admin/tracks/${track.id}`}
-                      className="text-sm text-blue-600 hover:underline"
-                    >
-                      Edit
-                    </Link>
+                    <div className="flex items-center gap-3">
+                      <Link
+                        href={`/admin/tracks/${track.id}`}
+                        className="text-sm text-blue-600 hover:underline"
+                      >
+                        Edit
+                      </Link>
+                      <DeleteButton
+                        url={`/api/admin/tracks/${track.id}`}
+                        confirmMessage={`Delete track "${track.trackName}"? This will permanently delete all modules, lessons, scenarios, questions, and certifications for this track.`}
+                        redirectTo="/admin/tracks"
+                        label="Delete"
+                        className="text-sm text-red-600 hover:underline"
+                      />
+                    </div>
                   </td>
                 </tr>
               ))}

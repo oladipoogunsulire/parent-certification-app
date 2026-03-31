@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
 import Link from "next/link"
+import DeleteButton from "@/app/components/DeleteButton"
 
 export default async function ModuleEditPage({
   params,
@@ -39,6 +40,13 @@ export default async function ModuleEditPage({
               )}
             </p>
           </div>
+          <DeleteButton
+            url={`/api/admin/tracks/${trackId}/modules/${moduleId}`}
+            confirmMessage={`Delete module "${module.moduleTitle}"? This will permanently delete all lessons and scenarios in this module.`}
+            redirectTo={`/admin/tracks/${trackId}`}
+            label="Delete module"
+            className="text-sm text-red-600 hover:underline"
+          />
         </div>
       </div>
 
@@ -69,12 +77,20 @@ export default async function ModuleEditPage({
                     {lesson.estimatedDurationMinutes} min • {lesson.xpValue} XP
                   </p>
                 </div>
-                <Link
-                  href={`/admin/tracks/${trackId}/modules/${moduleId}/lessons/${lesson.id}`}
-                  className="text-sm text-blue-600 hover:underline"
-                >
-                  Edit
-                </Link>
+                <div className="flex items-center gap-3">
+                  <Link
+                    href={`/admin/tracks/${trackId}/modules/${moduleId}/lessons/${lesson.id}`}
+                    className="text-sm text-blue-600 hover:underline"
+                  >
+                    Edit
+                  </Link>
+                  <DeleteButton
+                    url={`/api/admin/tracks/${trackId}/modules/${moduleId}/lessons/${lesson.id}`}
+                    confirmMessage={`Delete lesson "${lesson.lessonTitle}"? This cannot be undone.`}
+                    label="Delete"
+                    className="text-sm text-red-600 hover:underline"
+                  />
+                </div>
               </div>
             ))}
           </div>
@@ -112,12 +128,20 @@ export default async function ModuleEditPage({
                     {scenario.isRequired && " • Required"}
                   </p>
                 </div>
-                <Link
-                  href={`/admin/tracks/${trackId}/modules/${moduleId}/scenarios/${scenario.id}`}
-                  className="text-sm text-blue-600 hover:underline ml-4 flex-shrink-0"
-                >
-                  Edit
-                </Link>
+                <div className="flex items-center gap-3 ml-4 flex-shrink-0">
+                  <Link
+                    href={`/admin/tracks/${trackId}/modules/${moduleId}/scenarios/${scenario.id}`}
+                    className="text-sm text-blue-600 hover:underline"
+                  >
+                    Edit
+                  </Link>
+                  <DeleteButton
+                    url={`/api/admin/tracks/${trackId}/modules/${moduleId}/scenarios/${scenario.id}`}
+                    confirmMessage="Delete this scenario? This cannot be undone."
+                    label="Delete"
+                    className="text-sm text-red-600 hover:underline"
+                  />
+                </div>
               </div>
             ))}
           </div>

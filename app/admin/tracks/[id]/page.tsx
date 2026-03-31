@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
 import Link from "next/link"
+import DeleteButton from "@/app/components/DeleteButton"
 
 export default async function TrackEditPage({
   params,
@@ -41,9 +42,18 @@ export default async function TrackEditPage({
         </Link>
         <div className="flex items-center justify-between mt-2">
           <h2 className="text-2xl font-bold text-gray-900">{track.trackName}</h2>
-          <span className={`text-xs px-2 py-1 rounded-full ${track.isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}>
-            {track.isActive ? "Active" : "Inactive"}
-          </span>
+          <div className="flex items-center gap-3">
+            <span className={`text-xs px-2 py-1 rounded-full ${track.isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}>
+              {track.isActive ? "Active" : "Inactive"}
+            </span>
+            <DeleteButton
+              url={`/api/admin/tracks/${track.id}`}
+              confirmMessage={`Delete track "${track.trackName}"? This will permanently delete all modules, lessons, scenarios, questions, and certifications for this track.`}
+              redirectTo="/admin/tracks"
+              label="Delete track"
+              className="text-sm text-red-600 hover:underline"
+            />
+          </div>
         </div>
         <p className="text-gray-500 text-sm mt-1">{track.description}</p>
       </div>
@@ -94,12 +104,20 @@ export default async function TrackEditPage({
                       )}
                     </p>
                   </div>
-                  <Link
-                    href={`/admin/tracks/${track.id}/modules/${module.id}`}
-                    className="text-sm text-blue-600 hover:underline"
-                  >
-                    Edit
-                  </Link>
+                  <div className="flex items-center gap-3">
+                    <Link
+                      href={`/admin/tracks/${track.id}/modules/${module.id}`}
+                      className="text-sm text-blue-600 hover:underline"
+                    >
+                      Edit
+                    </Link>
+                    <DeleteButton
+                      url={`/api/admin/tracks/${track.id}/modules/${module.id}`}
+                      confirmMessage={`Delete module "${module.moduleTitle}"? This will permanently delete all lessons and scenarios in this module.`}
+                      label="Delete"
+                      className="text-sm text-red-600 hover:underline"
+                    />
+                  </div>
                 </div>
               </div>
             ))}
@@ -149,12 +167,20 @@ export default async function TrackEditPage({
                     {question.options.filter((o) => o.isCorrect).length} correct
                   </p>
                 </div>
-                <Link
-                  href={`/admin/tracks/${track.id}/questions/${question.id}`}
-                  className="ml-4 flex-shrink-0 text-sm text-blue-600 hover:underline"
-                >
-                  Edit
-                </Link>
+                <div className="ml-4 flex-shrink-0 flex items-center gap-3">
+                  <Link
+                    href={`/admin/tracks/${track.id}/questions/${question.id}`}
+                    className="text-sm text-blue-600 hover:underline"
+                  >
+                    Edit
+                  </Link>
+                  <DeleteButton
+                    url={`/api/admin/tracks/${track.id}/questions/${question.id}`}
+                    confirmMessage="Delete this question? This cannot be undone."
+                    label="Delete"
+                    className="text-sm text-red-600 hover:underline"
+                  />
+                </div>
               </div>
             ))}
           </div>

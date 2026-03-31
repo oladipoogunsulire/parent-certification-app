@@ -2,6 +2,33 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 
+async function adminGuard() {
+  const session = await auth()
+  if (!session?.user) return null
+  const user = await prisma.user.findUnique({ where: { email: session.user.email! } })
+  if (!user || user.role !== "ADMIN") return null
+  return user
+}
+
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string; moduleId: string; scenarioId: string }> }
+) {
+  const user = await adminGuard()
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+  const { scenarioId } = await params
+
+  try {
+    await prisma.scenarioResponse.deleteMany({ where: { scenarioId } })
+    await prisma.scenario.delete({ where: { id: scenarioId } })
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error("Delete scenario error:", error)
+    return NextResponse.json({ error: "Failed to delete scenario." }, { status: 500 })
+  }
+}
+
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; moduleId: string; scenarioId: string }> }
