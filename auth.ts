@@ -21,20 +21,32 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email as string },
-        })
+        try {
+          const email = (credentials.email as string).trim().toLowerCase()
 
-        if (!user || !user.passwordHash) return null
+          const user = await prisma.user.findUnique({
+            where: { email },
+          })
 
-        const passwordMatch = await bcrypt.compare(
-          credentials.password as string,
-          user.passwordHash
-        )
+          if (!user || !user.passwordHash) return null
 
-        if (!passwordMatch) return null
+          const passwordMatch = await bcrypt.compare(
+            credentials.password as string,
+            user.passwordHash
+          )
 
-        return user
+          if (!passwordMatch) return null
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.displayName ?? user.firstName ?? null,
+            role: user.role,
+          }
+        } catch (err) {
+          console.error("[auth] authorize error:", err)
+          return null
+        }
       },
     }),
   ],
