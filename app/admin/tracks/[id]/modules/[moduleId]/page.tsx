@@ -15,6 +15,7 @@ export default async function ModuleEditPage({
     where: { id: moduleId },
     include: {
       lessons: { orderBy: { createdAt: "asc" } },
+      scenarios: { orderBy: { createdAt: "asc" } },
       belt: true,
       track: true,
     },
@@ -71,6 +72,49 @@ export default async function ModuleEditPage({
                 <Link
                   href={`/admin/tracks/${trackId}/modules/${moduleId}/lessons/${lesson.id}`}
                   className="text-sm text-blue-600 hover:underline"
+                >
+                  Edit
+                </Link>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="bg-white rounded-lg border border-gray-200 p-6 mt-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="font-semibold text-gray-900">Scenarios</h3>
+            <p className="text-xs text-gray-500 mt-0.5">{module.scenarios.length} scenario{module.scenarios.length !== 1 ? "s" : ""}</p>
+          </div>
+          <Link
+            href={`/admin/tracks/${trackId}/modules/${moduleId}/scenarios/new`}
+            className="bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-blue-700"
+          >
+            Add scenario
+          </Link>
+        </div>
+
+        {module.scenarios.length === 0 ? (
+          <p className="text-gray-500 text-sm text-center py-8">
+            No scenarios yet. Add your first scenario.
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {module.scenarios.map((scenario, index) => (
+              <div key={scenario.id} className="border border-gray-200 rounded-lg p-4 flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-gray-900 line-clamp-1">
+                    {index + 1}. {scenario.narrativeText.slice(0, 80)}{scenario.narrativeText.length > 80 ? "…" : ""}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Complexity {scenario.complexityLevel} • {scenario.xpValue} XP
+                    {scenario.isRequired && " • Required"}
+                  </p>
+                </div>
+                <Link
+                  href={`/admin/tracks/${trackId}/modules/${moduleId}/scenarios/${scenario.id}`}
+                  className="text-sm text-blue-600 hover:underline ml-4 flex-shrink-0"
                 >
                   Edit
                 </Link>
