@@ -20,6 +20,14 @@ export default async function TrackEditPage({
         },
         orderBy: { orderIndex: "asc" },
       },
+      questions: {
+        include: {
+          options: true,
+          belt: true,
+        },
+        where: { isActive: true },
+        orderBy: [{ belt: { orderIndex: "asc" } }, { createdAt: "asc" }],
+      },
     },
   })
 
@@ -98,6 +106,71 @@ export default async function TrackEditPage({
           </div>
         )}
       </div>
+      {/* Question Bank */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6 mt-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="font-semibold text-gray-900">Question Bank</h3>
+            <p className="text-xs text-gray-500 mt-0.5">
+              {track.questions.length} question{track.questions.length !== 1 ? "s" : ""} across all belts
+            </p>
+          </div>
+          <Link
+            href={`/admin/tracks/${track.id}/questions/new`}
+            className="bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-blue-700"
+          >
+            Add question
+          </Link>
+        </div>
+
+        {track.questions.length === 0 ? (
+          <p className="text-gray-500 text-sm text-center py-8">
+            No questions yet. Add questions to enable belt exams.
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {track.questions.map((question, index) => (
+              <div
+                key={question.id}
+                className="border border-gray-200 rounded-lg p-4 flex items-start justify-between"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${beltBadgeColor(question.belt.beltLevel)}`}>
+                      {question.belt.beltLevel}
+                    </span>
+                    <span className="text-xs text-gray-400">
+                      {question.questionType.replace("_", " ")} · Difficulty {question.difficultyLevel}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-900 line-clamp-2">{question.questionText}</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {question.options.length} option{question.options.length !== 1 ? "s" : ""} ·{" "}
+                    {question.options.filter((o) => o.isCorrect).length} correct
+                  </p>
+                </div>
+                <Link
+                  href={`/admin/tracks/${track.id}/questions/${question.id}`}
+                  className="ml-4 flex-shrink-0 text-sm text-blue-600 hover:underline"
+                >
+                  Edit
+                </Link>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
+}
+
+function beltBadgeColor(level: string): string {
+  const map: Record<string, string> = {
+    WHITE: "bg-gray-100 text-gray-700",
+    YELLOW: "bg-yellow-100 text-yellow-800",
+    GREEN: "bg-green-100 text-green-800",
+    BLUE: "bg-blue-100 text-blue-800",
+    BLACK: "bg-gray-800 text-white",
+  }
+  return map[level.toUpperCase()] ?? "bg-gray-100 text-gray-700"
 }

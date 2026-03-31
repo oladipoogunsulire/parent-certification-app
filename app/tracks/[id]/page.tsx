@@ -124,19 +124,29 @@ export default async function TrackDetailPage({
           {track.belts.map((belt, beltIndex) => (
             <div key={belt.id}>
               {/* Belt header */}
-              <div className="flex items-center gap-3 mb-4">
-                <div
-                  className={`w-8 h-8 rounded-full flex-shrink-0 border-2 border-white shadow ${beltColor(belt.beltLevel)}`}
-                />
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    {belt.beltLevel} Belt
-                  </h3>
-                  <p className="text-xs text-gray-500">
-                    Pass threshold: {belt.passingThreshold}%
-                    {belt.expirable && " · Certification expires annually"}
-                  </p>
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`w-8 h-8 rounded-full flex-shrink-0 border-2 border-white shadow ${beltColor(belt.beltLevel)}`}
+                  />
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      {belt.beltLevel} Belt
+                    </h3>
+                    <p className="text-xs text-gray-500">
+                      Pass threshold: {belt.passingThreshold}%
+                      {belt.expirable && " · Certification expires annually"}
+                    </p>
+                  </div>
                 </div>
+                {hasActiveSubscription && (
+                  <a
+                    href={`/tracks/${id}/belts/${belt.id}/exam`}
+                    className="flex-shrink-0 text-sm font-medium bg-gray-900 text-white px-4 py-1.5 rounded-md hover:bg-gray-700"
+                  >
+                    Take exam
+                  </a>
+                )}
               </div>
 
               {/* Modules */}
