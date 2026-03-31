@@ -2,7 +2,6 @@ import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import DeleteButton from "@/app/components/DeleteButton"
-import type { Lesson, Scenario } from "@prisma/client"
 
 export default async function ModuleEditPage({
   params,
@@ -68,7 +67,7 @@ export default async function ModuleEditPage({
           </p>
         ) : (
           <div className="space-y-3">
-            {module.lessons.map((lesson: Lesson, index: number) => (
+            {module.lessons.map((lesson, index) => (
               <div key={lesson.id} className="border border-gray-200 rounded-lg p-4 flex items-center justify-between">
                 <div>
                   <p className="font-medium text-gray-900">
@@ -118,7 +117,7 @@ export default async function ModuleEditPage({
           </p>
         ) : (
           <div className="space-y-3">
-            {module.scenarios.map((scenario: Scenario, index: number) => (
+            {module.scenarios.map((scenario, index) => (
               <div key={scenario.id} className="border border-gray-200 rounded-lg p-4 flex items-center justify-between">
                 <div>
                   <p className="font-medium text-gray-900 line-clamp-1">
