@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 
-export async function POST(
+export async function PATCH(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string; moduleId: string }> }
+  { params }: { params: Promise<{ id: string; moduleId: string; scenarioId: string }> }
 ) {
   const session = await auth()
   if (!session?.user) {
@@ -19,7 +19,7 @@ export async function POST(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
-  const { moduleId } = await params
+  const { scenarioId } = await params
 
   const { beltId, scenarioTitle, narrativeText, complexityLevel, xpValue, isRequired, responses } =
     await req.json()
@@ -32,9 +32,9 @@ export async function POST(
   }
 
   try {
-    const scenario = await prisma.scenario.create({
+    const scenario = await prisma.scenario.update({
+      where: { id: scenarioId },
       data: {
-        moduleId,
         beltId,
         scenarioTitle,
         narrativeText,
@@ -42,6 +42,11 @@ export async function POST(
         xpValue: xpValue ?? 30,
         isRequired: isRequired ?? true,
       },
+    })
+
+    // Replace all responses: delete existing then recreate
+    await prisma.scenarioResponse.deleteMany({
+      where: { scenarioId },
     })
 
     const validResponses = (responses ?? []).filter(
@@ -56,7 +61,7 @@ export async function POST(
           scoreImpact?: number
           explanationText?: string
         }) => ({
-          scenarioId: scenario.id,
+          scenarioId,
           responseText: r.responseText,
           isOptimal: r.isOptimal ?? false,
           scoreImpact: r.scoreImpact ?? 0,
@@ -65,9 +70,9 @@ export async function POST(
       })
     }
 
-    return NextResponse.json(scenario, { status: 201 })
+    return NextResponse.json(scenario)
   } catch (error) {
-    console.error("Create scenario error:", error)
-    return NextResponse.json({ error: "Failed to save scenario." }, { status: 500 })
+    console.error("Update scenario error:", error)
+    return NextResponse.json({ error: "Failed to update scenario." }, { status: 500 })
   }
 }
