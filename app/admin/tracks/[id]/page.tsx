@@ -13,13 +13,14 @@ export default async function TrackEditPage({
   const track = await prisma.track.findUnique({
     where: { id },
     include: {
-      belts: { orderBy: { orderIndex: "asc" } },
-      modules: {
-        include: {
-          lessons: true,
-          belt: true,
-        },
+      belts: {
         orderBy: { orderIndex: "asc" },
+        include: {
+          modules: {
+            include: { lessons: true },
+            orderBy: { orderIndex: "asc" },
+          },
+        },
       },
       questions: {
         include: {
@@ -86,41 +87,55 @@ export default async function TrackEditPage({
           </Link>
         </div>
 
-        {track.modules.length === 0 ? (
+        {track.belts.every((b) => b.modules.length === 0) ? (
           <p className="text-gray-500 text-sm text-center py-8">
             No modules yet. Add your first module to get started.
           </p>
         ) : (
-          <div className="space-y-3">
-            {track.modules.map((module) => (
-              <div key={module.id} className="border border-gray-200 rounded-lg p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-gray-900">{module.moduleTitle}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      {module.belt.beltLevel} Belt • {module.lessons.length} lessons
-                      {module.isFreePreview && (
-                        <span className="ml-2 text-green-600">Free preview</span>
-                      )}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Link
-                      href={`/admin/tracks/${track.id}/modules/${module.id}`}
-                      className="text-sm text-blue-600 hover:underline"
-                    >
-                      Edit
-                    </Link>
-                    <DeleteButton
-                      url={`/api/admin/tracks/${track.id}/modules/${module.id}`}
-                      confirmMessage={`Delete module "${module.moduleTitle}"? This will permanently delete all lessons and scenarios in this module.`}
-                      label="Delete"
-                      className="text-sm text-red-600 hover:underline"
-                    />
+          <div className="space-y-6">
+            {track.belts.map((belt) =>
+              belt.modules.length === 0 ? null : (
+                <div key={belt.id}>
+                  <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                    {belt.beltLevel} Belt
+                  </h4>
+                  <div className="space-y-3">
+                    {belt.modules.map((module) => (
+                      <div key={module.id} className="border border-gray-200 rounded-lg p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium text-gray-900">
+                              <span className="text-xs text-gray-400 font-normal mr-1.5">#{module.orderIndex}</span>
+                              {module.moduleTitle}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              {module.lessons.length} lesson{module.lessons.length !== 1 ? "s" : ""}
+                              {module.isFreePreview && (
+                                <span className="ml-2 text-green-600">Free preview</span>
+                              )}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Link
+                              href={`/admin/tracks/${track.id}/modules/${module.id}`}
+                              className="text-sm text-blue-600 hover:underline"
+                            >
+                              Edit
+                            </Link>
+                            <DeleteButton
+                              url={`/api/admin/tracks/${track.id}/modules/${module.id}`}
+                              confirmMessage={`Delete module "${module.moduleTitle}"? This will permanently delete all lessons and scenarios in this module.`}
+                              label="Delete"
+                              className="text-sm text-red-600 hover:underline"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            )}
           </div>
         )}
       </div>

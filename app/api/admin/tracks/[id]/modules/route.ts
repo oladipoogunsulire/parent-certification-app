@@ -12,13 +12,16 @@ export async function POST(
   }
 
   const { id: trackId } = await params
-  const { moduleTitle, description, beltId, isRequired, isFreePreview, xpValue } = await req.json()
+  const { moduleTitle, description, beltId, isRequired, isFreePreview, xpValue, orderIndex } = await req.json()
 
   if (!moduleTitle || !beltId) {
     return NextResponse.json({ error: "Module title and belt are required." }, { status: 400 })
   }
 
-  const existingCount = await prisma.module.count({ where: { trackId } })
+  const resolvedOrderIndex =
+    orderIndex != null && !isNaN(Number(orderIndex))
+      ? Number(orderIndex)
+      : (await prisma.module.count({ where: { trackId, beltId } })) + 1
 
   const module = await prisma.module.create({
     data: {
@@ -29,7 +32,7 @@ export async function POST(
       isRequired,
       isFreePreview,
       xpValue,
-      orderIndex: existingCount + 1,
+      orderIndex: resolvedOrderIndex,
     },
   })
 

@@ -18,6 +18,7 @@ export default function NewModulePage() {
     isRequired: true,
     isFreePreview: false,
     xpValue: 50,
+    orderIndex: null as number | null,
   })
 
   useEffect(() => {
@@ -111,6 +112,21 @@ export default function NewModulePage() {
               </option>
             ))}
           </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Order index
+          </label>
+          <input
+            type="number"
+            value={form.orderIndex ?? ""}
+            onChange={(e) => setForm({ ...form, orderIndex: e.target.value ? parseInt(e.target.value) : null })}
+            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            min={1}
+            placeholder="Auto-assigned if left blank"
+          />
+          <p className="text-xs text-gray-500 mt-1">Position within this belt. Leave blank to place after existing modules.</p>
         </div>
 
         <div>
