@@ -7,8 +7,16 @@ export async function POST(
   { params }: { params: Promise<{ id: string; moduleId: string }> }
 ) {
   const session = await auth()
-  if (!session?.user || session.user.role !== "ADMIN") {
+  if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email! },
+  })
+
+  if (!user || user.role !== "ADMIN") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
   const { moduleId } = await params
