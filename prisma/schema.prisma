@@ -218,6 +218,7 @@ model Scenario {
   id                String   @id @default(uuid())
   moduleId          String
   beltId            String
+  scenarioTitle     String?
   narrativeText     String
   complexityLevel   Int      @default(1)
   xpValue           Int      @default(30)

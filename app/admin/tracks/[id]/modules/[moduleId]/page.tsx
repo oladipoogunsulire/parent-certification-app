@@ -105,7 +105,7 @@ export default async function ModuleEditPage({
               <div key={scenario.id} className="border border-gray-200 rounded-lg p-4 flex items-center justify-between">
                 <div>
                   <p className="font-medium text-gray-900 line-clamp-1">
-                    {index + 1}. {scenario.narrativeText.slice(0, 80)}{scenario.narrativeText.length > 80 ? "…" : ""}
+                    {index + 1}. {scenario.scenarioTitle ?? scenario.narrativeText.slice(0, 80) + (scenario.narrativeText.length > 80 ? "…" : "")}
                   </p>
                   <p className="text-xs text-gray-500 mt-0.5">
                     Complexity {scenario.complexityLevel} • {scenario.xpValue} XP

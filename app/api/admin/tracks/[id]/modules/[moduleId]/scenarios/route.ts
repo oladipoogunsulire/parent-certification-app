@@ -21,12 +21,12 @@ export async function POST(
 
   const { moduleId } = await params
 
-  const { beltId, narrativeText, complexityLevel, xpValue, isRequired, responses } =
+  const { beltId, scenarioTitle, narrativeText, complexityLevel, xpValue, isRequired, responses } =
     await req.json()
 
-  if (!beltId || !narrativeText) {
+  if (!beltId || !narrativeText || !scenarioTitle) {
     return NextResponse.json(
-      { error: "Belt and narrative text are required." },
+      { error: "Scenario title, belt, and narrative text are required." },
       { status: 400 }
     )
   }
@@ -36,6 +36,7 @@ export async function POST(
       data: {
         moduleId,
         beltId,
+        scenarioTitle,
         narrativeText,
         complexityLevel: complexityLevel ?? 1,
         xpValue: xpValue ?? 30,
