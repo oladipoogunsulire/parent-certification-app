@@ -58,7 +58,7 @@ export default function HomePage() {
         <div className="flex-1 flex justify-center md:justify-end">
           <div className="relative w-full max-w-[480px] aspect-[4/3] rounded-2xl overflow-hidden shadow-sm">
             <Image
-              src="/images/FAMILYimage.png"
+              src="/image/FAMILYimage.png"
               alt="Happy family together"
               fill
               className="object-cover"
