@@ -1,28 +1,29 @@
 import Link from "next/link"
+import Image from "next/image"
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-[#f0ebe3] font-sans">
+    <div className="min-h-screen bg-[#FAFAFA] font-sans">
 
       {/* ── Navbar ── */}
-      <header className="bg-white border-b border-[#e8e0d6]">
+      <header className="bg-white border-b border-[#e2e8f0]">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-full bg-[#3c2415] flex items-center justify-center flex-shrink-0">
+            <div className="w-9 h-9 rounded-full bg-[#1E3A5F] flex items-center justify-center flex-shrink-0">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                 <circle cx="12" cy="7" r="4" />
               </svg>
             </div>
-            <span className="text-lg font-semibold text-[#1c1209]">Parent Certification</span>
+            <span className="text-lg font-semibold text-[#1E293B]">Parent Certification</span>
           </Link>
           <div className="flex items-center gap-4">
-            <Link href="/login" className="text-sm text-[#4a3728] hover:text-[#1c1209]">
+            <Link href="/login" className="text-sm text-[#64748b] hover:text-[#1E293B]">
               Sign In
             </Link>
             <Link
               href="/register"
-              className="text-sm font-medium bg-[#3c2415] text-white px-4 py-2 rounded-lg hover:bg-[#2e1b0f] transition-colors"
+              className="text-sm font-medium bg-[#F97316] text-white px-4 py-2 rounded-lg hover:bg-[#ea6c0a] transition-colors"
             >
               Get Started
             </Link>
@@ -33,34 +34,35 @@ export default function HomePage() {
       {/* ── Hero ── */}
       <section className="max-w-6xl mx-auto px-6 py-24 flex flex-col md:flex-row items-center gap-12">
         <div className="flex-1">
-          <h1 className="text-5xl md:text-6xl font-bold text-[#1c1209] leading-tight mb-6">
+          <h1 className="text-5xl md:text-6xl font-bold text-[#1E293B] leading-tight mb-6">
             Become the<br />parent your<br />child deserves
           </h1>
-          <p className="text-[#6b5c4e] text-lg leading-relaxed mb-8 max-w-md">
+          <p className="text-[#64748b] text-lg leading-relaxed mb-8 max-w-md">
             Structured certification tracks that help you build real parenting skills — at your own pace.
           </p>
           <div className="flex flex-wrap gap-3">
             <Link
               href="/register"
-              className="bg-[#3c2415] text-white px-6 py-3 rounded-lg font-medium hover:bg-[#2e1b0f] transition-colors"
+              className="bg-[#F97316] text-white px-6 py-3 rounded-lg font-medium hover:bg-[#ea6c0a] transition-colors"
             >
               Get Started Free
             </Link>
             <Link
               href="/subscribe"
-              className="bg-white text-[#1c1209] border border-[#d6cdc3] px-6 py-3 rounded-lg font-medium hover:bg-[#f7f3ef] transition-colors"
+              className="bg-white text-[#1E293B] border border-[#e2e8f0] px-6 py-3 rounded-lg font-medium hover:bg-[#f1f5f9] transition-colors"
             >
               View Plans
             </Link>
           </div>
         </div>
         <div className="flex-1 flex justify-center md:justify-end">
-          <div className="w-full max-w-[480px] aspect-[4/3] rounded-2xl overflow-hidden shadow-sm">
-            {/* Family photo — swap src for your own image */}
-            <img
-              src="https://images.unsplash.com/photo-1581579438747-1dc8d17bbce4?w=800&q=80"
+          <div className="relative w-full max-w-[480px] aspect-[4/3] rounded-2xl overflow-hidden shadow-sm">
+            <Image
+              src="/images/FAMILYimage.png"
               alt="Happy family together"
-              className="w-full h-full object-cover"
+              fill
+              className="object-cover"
+              priority
             />
           </div>
         </div>
@@ -68,8 +70,8 @@ export default function HomePage() {
 
       {/* ── How It Works ── */}
       <section className="max-w-6xl mx-auto px-6 py-20">
-        <h2 className="text-4xl font-bold text-[#1c1209] text-center mb-3">How It Works</h2>
-        <p className="text-[#6b5c4e] text-center mb-12">
+        <h2 className="text-4xl font-bold text-[#1E293B] text-center mb-3">How It Works</h2>
+        <p className="text-[#64748b] text-center mb-12">
           A simple three-step journey to becoming a more confident parent
         </p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -109,13 +111,13 @@ export default function HomePage() {
               desc: "Receive recognized certifications that validate your parenting expertise.",
             },
           ].map((step) => (
-            <div key={step.num} className="bg-[#f7f3ef] rounded-2xl p-8 relative">
-              <span className="absolute top-5 right-6 text-3xl font-bold text-[#e0d8cf]">{step.num}</span>
-              <div className="w-12 h-12 rounded-full bg-[#ede8e0] flex items-center justify-center text-[#4a3728] mb-5">
+            <div key={step.num} className="bg-[#f1f5f9] rounded-2xl p-8 relative">
+              <span className="absolute top-5 right-6 text-3xl font-bold text-[#cbd5e1]">{step.num}</span>
+              <div className="w-12 h-12 rounded-full bg-[#e2e8f0] flex items-center justify-center text-[#1E3A5F] mb-5">
                 {step.icon}
               </div>
-              <h3 className="text-lg font-semibold text-[#1c1209] mb-2">{step.title}</h3>
-              <p className="text-[#6b5c4e] text-sm leading-relaxed">{step.desc}</p>
+              <h3 className="text-lg font-semibold text-[#1E293B] mb-2">{step.title}</h3>
+              <p className="text-[#64748b] text-sm leading-relaxed">{step.desc}</p>
             </div>
           ))}
         </div>
@@ -123,8 +125,8 @@ export default function HomePage() {
 
       {/* ── What You'll Learn ── */}
       <section className="max-w-6xl mx-auto px-6 py-20">
-        <h2 className="text-4xl font-bold text-[#1c1209] text-center mb-3">What You&apos;ll Learn</h2>
-        <p className="text-[#6b5c4e] text-center mb-12">
+        <h2 className="text-4xl font-bold text-[#1E293B] text-center mb-3">What You&apos;ll Learn</h2>
+        <p className="text-[#64748b] text-center mb-12">
           Progress through our structured belt system, building skills at each level
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -142,7 +144,7 @@ export default function HomePage() {
             </div>
           ))}
         </div>
-        <p className="text-[#6b5c4e] text-center mt-10 max-w-2xl mx-auto">
+        <p className="text-[#64748b] text-center mt-10 max-w-2xl mx-auto">
           Each belt includes video lessons, quizzes, practical assignments, and a final assessment to earn your certification.
         </p>
       </section>
@@ -150,13 +152,13 @@ export default function HomePage() {
       {/* ── Pricing teaser ── */}
       <section className="bg-white py-20">
         <div className="max-w-6xl mx-auto px-6 text-center">
-          <h2 className="text-4xl font-bold text-[#1c1209] mb-4">Affordable Plans for Every Family</h2>
-          <p className="text-[#6b5c4e] text-lg mb-8">
-            Plans from <span className="font-bold text-[#1c1209]">$29/month</span> — invest in your family&apos;s future today.
+          <h2 className="text-4xl font-bold text-[#1E293B] mb-4">Affordable Plans for Every Family</h2>
+          <p className="text-[#64748b] text-lg mb-8">
+            Plans from <span className="font-bold text-[#F97316]">$29/month</span> — invest in your family&apos;s future today.
           </p>
           <Link
             href="/subscribe"
-            className="inline-block border border-[#d6cdc3] text-[#1c1209] px-8 py-3 rounded-lg font-medium hover:bg-[#f7f3ef] transition-colors"
+            className="inline-block border border-[#e2e8f0] text-[#1E293B] px-8 py-3 rounded-lg font-medium hover:bg-[#f1f5f9] transition-colors"
           >
             See Pricing
           </Link>
@@ -164,15 +166,15 @@ export default function HomePage() {
       </section>
 
       {/* ── CTA Banner ── */}
-      <section className="bg-[#3c2415] py-20">
+      <section className="bg-[#1E3A5F] py-20">
         <div className="max-w-6xl mx-auto px-6 text-center">
           <h2 className="text-4xl font-bold text-white mb-4">Ready to start your journey?</h2>
-          <p className="text-[#c9b9a8] text-lg mb-8">
+          <p className="text-[#93c5fd] text-lg mb-8">
             Join thousands of parents who are building stronger connections with their children.
           </p>
           <Link
             href="/register"
-            className="inline-block border border-[#c9b9a8] text-white px-8 py-3 rounded-lg font-medium hover:bg-white hover:text-[#3c2415] transition-colors"
+            className="inline-block border border-white text-white px-8 py-3 rounded-lg font-medium hover:bg-white hover:text-[#1E3A5F] transition-colors"
           >
             Create Your Account
           </Link>
@@ -180,10 +182,10 @@ export default function HomePage() {
       </section>
 
       {/* ── Footer ── */}
-      <footer className="bg-[#1c1209] py-8">
+      <footer className="bg-[#0f172a] py-8">
         <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-[#3c2415] flex items-center justify-center flex-shrink-0">
+            <div className="w-8 h-8 rounded-full bg-[#1E3A5F] flex items-center justify-center flex-shrink-0">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                 <circle cx="12" cy="7" r="4" />
@@ -191,13 +193,13 @@ export default function HomePage() {
             </div>
             <span className="text-sm font-semibold text-white">Parent Certification</span>
           </Link>
-          <nav className="flex items-center gap-6 text-sm text-[#9c8878]">
+          <nav className="flex items-center gap-6 text-sm text-[#94a3b8]">
             <Link href="/" className="hover:text-white transition-colors">Home</Link>
             <Link href="/tracks" className="hover:text-white transition-colors">Tracks</Link>
             <Link href="/subscribe" className="hover:text-white transition-colors">Pricing</Link>
             <Link href="/login" className="hover:text-white transition-colors">Sign In</Link>
           </nav>
-          <p className="text-xs text-[#6b5c4e]">© 2026 Parent Certification. All rights reserved.</p>
+          <p className="text-xs text-[#64748b]">© 2026 Parent Certification. All rights reserved.</p>
         </div>
       </footer>
 
