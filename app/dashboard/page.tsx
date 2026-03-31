@@ -28,6 +28,12 @@ export default async function DashboardPage() {
 
   const hasActiveSubscription = (user?.subscriptions.length ?? 0) > 0
 
+  const firstName =
+    user?.firstName ??
+    session?.user?.name?.split(" ")[0] ??
+    session?.user?.email?.split("@")[0] ??
+    ""
+
   return (
     <div className="min-h-screen bg-gray-50">
       <AppHeader />
@@ -35,7 +41,7 @@ export default async function DashboardPage() {
       <main className="max-w-6xl mx-auto px-4 py-8">
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900">
-            Welcome back, {user?.firstName}!
+            Welcome back, {firstName}!
           </h2>
           <p className="text-gray-600 mt-1">
             Continue your parenting certification journey.
