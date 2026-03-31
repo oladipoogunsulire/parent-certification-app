@@ -45,6 +45,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     signIn: "/login",
   },
   callbacks: {
+    async signIn({ user, account }) {
+      // For Google OAuth, check whether the email already belongs to a
+      // credentials-based account that hasn't linked Google yet.
+      // If it has a password (credentials user) and no linked Google account,
+      // block the sign-in so they don't get silently merged into the wrong account.
+      if (account?.provider === "google" && user.email) {
+        const existing = await prisma.user.findUnique({
+          where: { email: user.email },
+          include: { accounts: { where: { provider: "google" } } },
+        })
+        if (existing && existing.passwordHash && existing.accounts.length === 0) {
+          // Credentials account exists with this email but no Google link yet.
+          // Redirect to login with an informative error instead of auto-linking.
+          return "/login?error=UseEmailPassword"
+        }
+      }
+      return true
+    },
     async jwt({ token, user }) {
       if (user) {
         token.role = (user as any).role

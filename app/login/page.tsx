@@ -2,10 +2,12 @@
 
 import { useState } from "react"
 import { signIn } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 
 export default function LoginPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const urlError = searchParams.get("error")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
@@ -35,6 +37,12 @@ export default function LoginPage() {
       <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Welcome back</h1>
         <p className="text-gray-600 mb-8">Sign in to your account</p>
+
+        {urlError === "UseEmailPassword" && (
+          <div className="bg-amber-50 text-amber-800 p-3 rounded mb-4 text-sm">
+            An account with this email already exists. Please sign in with your email and password instead.
+          </div>
+        )}
 
         {error && (
           <div className="bg-red-50 text-red-700 p-3 rounded mb-4 text-sm">
