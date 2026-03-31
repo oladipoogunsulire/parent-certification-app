@@ -35,15 +35,15 @@ export default async function DashboardPage() {
     ""
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <AppHeader />
 
       <main className="max-w-6xl mx-auto px-4 py-8">
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900">
+          <h2 className="text-2xl font-bold text-primary">
             Welcome back, {firstName}!
           </h2>
-          <p className="text-gray-600 mt-1">
+          <p className="text-foreground/60 mt-1">
             Continue your parenting certification journey.
           </p>
         </div>
@@ -54,29 +54,30 @@ export default async function DashboardPage() {
             <p className="text-blue-700 text-sm mt-1">
               Subscribe to access full track content, belt exams, and certification.
             </p>
-            <a href="/subscribe" className="inline-block mt-3 bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700">
+            <a href="/subscribe" className="inline-block mt-3 bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary-hover transition-colors">
               View plans — from $29/month
             </a>
           </div>
         )}
 
         <div className="mb-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Certification Tracks</h3>
+          <h3 className="text-lg font-semibold text-primary mb-4">Certification Tracks</h3>
           {(user?.certifications.length ?? 0) === 0 ? (
-            <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
-              <p className="text-gray-500 mb-4">You have not started any tracks yet.</p>
-              <a href="/tracks" className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700">
-                Browse tracks
+            <div className="bg-white rounded-lg border border-gray-100 shadow-sm p-10 text-center">
+              <div className="text-4xl mb-3">🎯</div>
+              <p className="text-foreground/60 mb-4">Your journey starts here — browse a track to begin</p>
+              <a href="/tracks" className="inline-block bg-primary text-white px-5 py-2 rounded-md text-sm font-medium hover:bg-primary-hover transition-colors">
+                Browse Tracks
               </a>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {user?.certifications.map((cert) => (
-                <div key={cert.id} className="bg-white rounded-lg border border-gray-200 p-6">
-                  <h4 className="font-semibold text-gray-900">{cert.track.trackName}</h4>
-                  <p className="text-sm text-gray-500 mt-1">{cert.track.ageBand}</p>
+                <div key={cert.id} className="bg-white rounded-lg border border-gray-100 shadow-sm p-6">
+                  <h4 className="font-semibold text-foreground">{cert.track.trackName}</h4>
+                  <p className="text-sm text-foreground/50 mt-1">{cert.track.ageBand}</p>
                   <div className="mt-4 flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700">
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${beltBadge(cert.belt.beltLevel)}`}>
                       {cert.belt.beltLevel} Belt
                     </span>
                     <span className={`text-xs px-2 py-1 rounded-full ${
@@ -96,21 +97,21 @@ export default async function DashboardPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <p className="text-sm text-gray-500">Active tracks</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">
+          <div className="bg-white rounded-lg border border-gray-100 border-l-4 border-l-accent shadow-sm p-6">
+            <p className="text-sm text-foreground/60">Active tracks</p>
+            <p className="text-2xl font-bold text-primary mt-1">
               {user?.certifications.filter((c) => c.status === "ACTIVE").length ?? 0}
             </p>
           </div>
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <p className="text-sm text-gray-500">Certifications earned</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">
+          <div className="bg-white rounded-lg border border-gray-100 border-l-4 border-l-accent shadow-sm p-6">
+            <p className="text-sm text-foreground/60">Certifications earned</p>
+            <p className="text-2xl font-bold text-primary mt-1">
               {user?.certifications.filter((c) => c.status === "ACTIVE").length ?? 0}
             </p>
           </div>
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <p className="text-sm text-gray-500">Account status</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">
+          <div className="bg-white rounded-lg border border-gray-100 border-l-4 border-l-accent shadow-sm p-6">
+            <p className="text-sm text-foreground/60">Account status</p>
+            <p className="text-2xl font-bold text-primary mt-1">
               {hasActiveSubscription ? "Active" : "Free"}
             </p>
           </div>
@@ -118,4 +119,17 @@ export default async function DashboardPage() {
       </main>
     </div>
   )
+}
+
+function beltBadge(level: string): string {
+  const map: Record<string, string> = {
+    WHITE: "bg-gray-100 text-gray-700",
+    YELLOW: "bg-yellow-100 text-yellow-700",
+    ORANGE: "bg-orange-100 text-orange-700",
+    GREEN: "bg-green-100 text-green-700",
+    BLUE: "bg-blue-100 text-blue-700",
+    BROWN: "bg-amber-100 text-amber-700",
+    BLACK: "bg-gray-900 text-white",
+  }
+  return map[level.toUpperCase()] ?? "bg-gray-100 text-gray-700"
 }

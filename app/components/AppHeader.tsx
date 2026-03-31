@@ -42,13 +42,13 @@ export default async function AppHeader() {
   }
 
   return (
-    <header className="bg-white border-b border-gray-200">
+    <header className="bg-white border-b border-gray-100 shadow-sm">
       <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-        <a href="/" className="text-xl font-bold text-gray-900">
+        <a href="/" className="text-xl font-bold text-primary">
           Parent Certification
         </a>
         <nav className="flex items-center gap-4">
-          <a href="/tracks" className="text-sm text-gray-600 hover:text-gray-900">
+          <a href="/tracks" className="text-sm text-foreground/70 hover:text-foreground transition-colors">
             Tracks
           </a>
           {userProps ? (
@@ -56,7 +56,7 @@ export default async function AppHeader() {
           ) : (
             <a
               href="/login"
-              className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+              className="text-sm font-medium text-accent hover:underline"
             >
               Sign in
             </a>

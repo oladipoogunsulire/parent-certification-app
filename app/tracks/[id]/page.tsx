@@ -46,30 +46,26 @@ export default async function TrackDetailPage({
   const firstModule = track.belts[0]?.modules[0]
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200">
+    <div className="min-h-screen bg-background">
+      <header className="bg-white border-b border-gray-100 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-xl font-bold text-gray-900">Parent Certification</h1>
+          <a href="/" className="text-xl font-bold text-primary">
+            Parent Certification
+          </a>
           <div className="flex items-center gap-4">
-            <a href="/tracks" className="text-sm text-gray-600 hover:text-gray-900">
+            <a href="/tracks" className="text-sm text-foreground/70 hover:text-foreground transition-colors">
               All tracks
             </a>
             {session?.user ? (
               <>
-                <a href="/dashboard" className="text-sm text-gray-600 hover:text-gray-900">
+                <a href="/dashboard" className="text-sm text-foreground/70 hover:text-foreground transition-colors">
                   Dashboard
-                </a>
-                <a
-                  href="/api/auth/signout"
-                  className="text-sm text-gray-500 hover:text-gray-700"
-                >
-                  Sign out
                 </a>
               </>
             ) : (
               <a
                 href="/login"
-                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                className="text-sm font-medium text-accent hover:underline"
               >
                 Sign in
               </a>
@@ -81,21 +77,21 @@ export default async function TrackDetailPage({
       <main className="max-w-4xl mx-auto px-4 py-8">
         {/* Breadcrumb + title */}
         <div className="mb-8">
-          <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
-            <a href="/tracks" className="hover:text-gray-700">
+          <div className="flex items-center gap-2 text-sm text-foreground/50 mb-3">
+            <a href="/tracks" className="hover:text-foreground transition-colors">
               Tracks
             </a>
             <span>/</span>
-            <span className="text-gray-900">{track.trackName}</span>
+            <span className="text-foreground">{track.trackName}</span>
           </div>
           {track.ageBand && (
-            <span className="text-xs font-medium bg-blue-50 text-blue-700 px-2 py-1 rounded-full">
+            <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-1 rounded-full">
               {track.ageBand}
             </span>
           )}
-          <h2 className="text-3xl font-bold text-gray-900 mt-3">{track.trackName}</h2>
+          <h2 className="text-3xl font-bold text-primary mt-3">{track.trackName}</h2>
           {track.description && (
-            <p className="text-gray-600 mt-2">{track.description}</p>
+            <p className="text-foreground/60 mt-2">{track.description}</p>
           )}
         </div>
 
@@ -112,7 +108,7 @@ export default async function TrackDetailPage({
             </div>
             <a
               href="/subscribe"
-              className="ml-4 flex-shrink-0 bg-amber-600 text-white text-sm font-medium px-4 py-2 rounded-md hover:bg-amber-700"
+              className="ml-4 flex-shrink-0 bg-primary text-white text-sm font-medium px-4 py-2 rounded-md hover:bg-primary-hover transition-colors"
             >
               Subscribe
             </a>
@@ -127,13 +123,13 @@ export default async function TrackDetailPage({
               <div className="flex items-center justify-between gap-3 mb-4">
                 <div className="flex items-center gap-3">
                   <div
-                    className={`w-8 h-8 rounded-full flex-shrink-0 border-2 border-white shadow ${beltColor(belt.beltLevel)}`}
+                    className={`w-8 h-8 rounded-full flex-shrink-0 border-2 border-white shadow ${beltDot(belt.beltLevel)}`}
                   />
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h3 className="text-lg font-semibold text-foreground">
                       {belt.beltLevel} Belt
                     </h3>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-foreground/50">
                       Pass threshold: {belt.passingThreshold}%
                       {belt.expirable && " · Certification expires annually"}
                     </p>
@@ -142,7 +138,7 @@ export default async function TrackDetailPage({
                 {hasActiveSubscription && (
                   <a
                     href={`/tracks/${id}/belts/${belt.id}/exam`}
-                    className="flex-shrink-0 text-sm font-medium bg-gray-900 text-white px-4 py-1.5 rounded-md hover:bg-gray-700"
+                    className="flex-shrink-0 text-sm font-medium bg-primary text-white px-4 py-1.5 rounded-md hover:bg-primary-hover transition-colors"
                   >
                     Take exam
                   </a>
@@ -151,7 +147,7 @@ export default async function TrackDetailPage({
 
               {/* Modules */}
               {belt.modules.length === 0 ? (
-                <p className="text-sm text-gray-400 ml-11">No modules yet.</p>
+                <p className="text-sm text-foreground/40 ml-11">No modules yet.</p>
               ) : (
                 <div className="ml-11 space-y-3">
                   {belt.modules.map((module, moduleIndex) => {
@@ -169,13 +165,13 @@ export default async function TrackDetailPage({
                     return (
                       <div
                         key={module.id}
-                        className="bg-white rounded-lg border border-gray-200 p-4 flex items-center justify-between"
+                        className="bg-white rounded-lg border border-gray-100 shadow-sm p-4 flex items-center justify-between"
                       >
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             {!isAccessible && (
                               <svg
-                                className="w-3.5 h-3.5 text-gray-400 flex-shrink-0"
+                                className="w-3.5 h-3.5 text-foreground/30 flex-shrink-0"
                                 fill="currentColor"
                                 viewBox="0 0 20 20"
                               >
@@ -186,7 +182,7 @@ export default async function TrackDetailPage({
                                 />
                               </svg>
                             )}
-                            <h4 className="font-medium text-gray-900 truncate">
+                            <h4 className="font-medium text-foreground truncate">
                               {module.moduleTitle}
                             </h4>
                             {isFree && (
@@ -196,11 +192,11 @@ export default async function TrackDetailPage({
                             )}
                           </div>
                           {module.description && (
-                            <p className="text-sm text-gray-500 truncate">
+                            <p className="text-sm text-foreground/50 truncate">
                               {module.description}
                             </p>
                           )}
-                          <p className="text-xs text-gray-400 mt-1">
+                          <p className="text-xs text-foreground/40 mt-1">
                             {module.xpValue} XP
                             {module.ceEligible && ` · ${module.ceValue} CE credits`}
                           </p>
@@ -210,19 +206,19 @@ export default async function TrackDetailPage({
                           {href && isAccessible ? (
                             <a
                               href={href}
-                              className="text-sm font-medium text-blue-600 hover:text-blue-800"
+                              className="text-sm font-medium text-accent hover:underline"
                             >
                               Start
                             </a>
                           ) : href && !isAccessible ? (
                             <a
                               href="/subscribe"
-                              className="text-sm font-medium text-gray-400 hover:text-gray-600"
+                              className="text-sm font-medium text-foreground/40 hover:text-foreground/70 transition-colors"
                             >
                               Unlock
                             </a>
                           ) : (
-                            <span className="text-sm text-gray-400">No lessons</span>
+                            <span className="text-sm text-foreground/30">No lessons</span>
                           )}
                         </div>
                       </div>
@@ -238,12 +234,14 @@ export default async function TrackDetailPage({
   )
 }
 
-function beltColor(level: string): string {
+function beltDot(level: string): string {
   const map: Record<string, string> = {
     WHITE: "bg-gray-200",
     YELLOW: "bg-yellow-400",
+    ORANGE: "bg-orange-400",
     GREEN: "bg-green-500",
     BLUE: "bg-blue-500",
+    BROWN: "bg-amber-600",
     BLACK: "bg-gray-900",
   }
   return map[level.toUpperCase()] ?? "bg-gray-300"
