@@ -52,7 +52,7 @@ export default async function DashboardPage() {
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
             <h3 className="font-semibold text-blue-900">Start your certification</h3>
             <p className="text-blue-700 text-sm mt-1">
-              Subscribe to access full track content, belt exams, and certification.
+              Subscribe to access full module content, belt exams, and certification.
             </p>
             <a href="/subscribe" className="inline-block mt-3 bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary-hover transition-colors">
               View plans — from $29/month
@@ -61,13 +61,13 @@ export default async function DashboardPage() {
         )}
 
         <div className="mb-8">
-          <h3 className="text-lg font-semibold text-primary mb-4">Certification Tracks</h3>
+          <h3 className="text-lg font-semibold text-primary mb-4">Certification Modules</h3>
           {(user?.certifications.length ?? 0) === 0 ? (
             <div className="bg-white rounded-lg border border-gray-100 shadow-sm p-10 text-center">
               <div className="text-4xl mb-3">🎯</div>
-              <p className="text-foreground/60 mb-4">Your journey starts here — browse a track to begin</p>
+              <p className="text-foreground/60 mb-4">Your journey starts here — browse a module to begin</p>
               <a href="/tracks" className="inline-block bg-primary text-white px-5 py-2 rounded-md text-sm font-medium hover:bg-primary-hover transition-colors">
-                Browse Tracks
+                Browse Modules
               </a>
             </div>
           ) : (
@@ -98,7 +98,7 @@ export default async function DashboardPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white rounded-lg border border-gray-100 border-l-4 border-l-accent shadow-sm p-6">
-            <p className="text-sm text-foreground/60">Active tracks</p>
+            <p className="text-sm text-foreground/60">Active Modules</p>
             <p className="text-2xl font-bold text-primary mt-1">
               {user?.certifications.filter((c) => c.status === "ACTIVE").length ?? 0}
             </p>

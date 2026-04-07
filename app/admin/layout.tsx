@@ -32,7 +32,7 @@ export default async function AdminLayout({
                 Overview
               </a>
               <a href="/admin/tracks" className="text-white/70 hover:text-white transition-colors">
-                Tracks
+                Modules
               </a>
               <a href="/admin/users" className="text-white/70 hover:text-white transition-colors">
                 Users

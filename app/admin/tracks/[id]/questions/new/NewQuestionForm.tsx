@@ -100,7 +100,7 @@ export default function NewQuestionForm({
           href={`/admin/tracks/${trackId}`}
           className="text-sm text-blue-600 hover:underline"
         >
-          Back to track
+          Back to module
         </a>
         <h2 className="text-2xl font-bold text-gray-900 mt-2">Add question</h2>
       </div>

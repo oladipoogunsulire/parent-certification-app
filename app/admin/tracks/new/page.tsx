@@ -45,9 +45,9 @@ export default function NewTrackPage() {
     <div className="max-w-2xl">
       <div className="mb-6">
         <a href="/admin/tracks" className="text-sm text-blue-600 hover:underline">
-          Back to tracks
+          Back to modules
         </a>
-        <h2 className="text-2xl font-bold text-gray-900 mt-2">Create track</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mt-2">Create module</h2>
       </div>
 
       {error && (
@@ -57,7 +57,7 @@ export default function NewTrackPage() {
       <form onSubmit={handleSubmit} className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Track name <span className="text-red-500">*</span>
+            Module name <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
@@ -78,7 +78,7 @@ export default function NewTrackPage() {
             onChange={(e) => setForm({ ...form, description: e.target.value })}
             className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             rows={3}
-            placeholder="Brief description of this track..."
+            placeholder="Brief description of this module..."
           />
         </div>
 
@@ -120,7 +120,7 @@ export default function NewTrackPage() {
             disabled={loading}
             className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
           >
-            {loading ? "Creating..." : "Create track"}
+            {loading ? "Creating..." : "Create module"}
           </button>
           
 <a href="/admin/tracks" className="border border-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-50">

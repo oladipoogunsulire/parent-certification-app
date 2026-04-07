@@ -39,7 +39,7 @@ export default async function TrackEditPage({
     <div>
       <div className="mb-6">
         <Link href="/admin/tracks" className="text-sm text-blue-600 hover:underline">
-          Back to tracks
+          Back to modules
         </Link>
         <div className="flex items-center justify-between mt-2">
           <h2 className="text-2xl font-bold text-gray-900">{track.trackName}</h2>
@@ -49,9 +49,9 @@ export default async function TrackEditPage({
             </span>
             <DeleteButton
               url={`/api/admin/tracks/${track.id}`}
-              confirmMessage={`Delete track "${track.trackName}"? This will permanently delete all modules, lessons, scenarios, questions, and certifications for this track.`}
+              confirmMessage={`Delete module "${track.trackName}"? This will permanently delete all lessons, scenarios, questions, and certifications for this module.`}
               redirectTo="/admin/tracks"
-              label="Delete track"
+              label="Delete module"
               className="text-sm text-red-600 hover:underline"
             />
           </div>

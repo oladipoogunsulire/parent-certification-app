@@ -58,7 +58,7 @@ export default function NewModulePage() {
     <div className="max-w-2xl">
       <div className="mb-6">
         <a href={`/admin/tracks/${trackId}`} className="text-sm text-blue-600 hover:underline">
-          Back to track
+          Back to module
         </a>
         <h2 className="text-2xl font-bold text-gray-900 mt-2">Add module</h2>
       </div>

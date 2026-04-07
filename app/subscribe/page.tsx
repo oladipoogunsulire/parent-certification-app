@@ -38,7 +38,7 @@ export default function SubscribePage() {
             Start your certification journey
           </h1>
           <p className="text-gray-600 mt-2">
-            Full access to all tracks, belt exams, and public certification
+            Full access to all modules, belt exams, and public certification
           </p>
         </div>
 
@@ -50,7 +50,7 @@ export default function SubscribePage() {
               <span className="text-gray-500">/month</span>
             </div>
             <ul className="space-y-3 mb-8 text-sm text-gray-600">
-              <li>✓ Full access to all certification tracks</li>
+              <li>✓ Full access to all certification modules</li>
               <li>✓ Belt exams and progression</li>
               <li>✓ Black Belt certification</li>
               <li>✓ Public verification page</li>
@@ -82,7 +82,7 @@ export default function SubscribePage() {
               <li>✓ Everything in Monthly</li>
               <li>✓ 2 months free</li>
               <li>✓ Priority support</li>
-              <li>✓ Early access to new tracks</li>
+              <li>✓ Early access to new modules</li>
             </ul>
             <button
               onClick={() => handleSubscribe(

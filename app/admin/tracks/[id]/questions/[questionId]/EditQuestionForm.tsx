@@ -92,7 +92,7 @@ export default function EditQuestionForm({ trackId, questionId, belts, initial }
     <div className="max-w-3xl">
       <div className="mb-6">
         <a href={`/admin/tracks/${trackId}`} className="text-sm text-blue-600 hover:underline">
-          Back to track
+          Back to module
         </a>
         <h2 className="text-2xl font-bold text-gray-900 mt-2">Edit question</h2>
       </div>

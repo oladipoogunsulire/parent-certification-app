@@ -49,7 +49,7 @@ export default async function AppHeader() {
         </a>
         <nav className="flex items-center gap-4">
           <a href="/tracks" className="text-sm text-foreground/70 hover:text-foreground transition-colors">
-            Tracks
+            Modules
           </a>
           {userProps ? (
             <UserMenu {...userProps} />

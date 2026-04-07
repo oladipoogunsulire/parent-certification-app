@@ -28,7 +28,7 @@ export default async function ModuleEditPage({
     <div>
       <div className="mb-6">
         <Link href={`/admin/tracks/${trackId}`} className="text-sm text-blue-600 hover:underline">
-          Back to track
+          Back to module
         </Link>
         <div className="flex items-center justify-between mt-2">
           <div>

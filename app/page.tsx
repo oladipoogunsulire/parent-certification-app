@@ -38,7 +38,7 @@ export default function HomePage() {
             Become the<br />parent your<br />child deserves
           </h1>
           <p className="text-[#64748b] text-lg leading-relaxed mb-8 max-w-md">
-            Structured certification tracks that help you build real parenting skills — at your own pace.
+            Structured certification modules that help you build real parenting skills — at your own pace.
           </p>
           <div className="flex flex-wrap gap-3">
             <Link
@@ -84,8 +84,8 @@ export default function HomePage() {
                   <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
                 </svg>
               ),
-              title: "Choose your track",
-              desc: "Select from specialized parenting tracks designed for your family's unique needs.",
+              title: "Choose your module",
+              desc: "Select from specialized parenting modules designed for your family's unique needs.",
             },
             {
               num: "2",
@@ -195,7 +195,7 @@ export default function HomePage() {
           </Link>
           <nav className="flex items-center gap-6 text-sm text-[#94a3b8]">
             <Link href="/" className="hover:text-white transition-colors">Home</Link>
-            <Link href="/tracks" className="hover:text-white transition-colors">Tracks</Link>
+            <Link href="/tracks" className="hover:text-white transition-colors">Modules</Link>
             <Link href="/subscribe" className="hover:text-white transition-colors">Pricing</Link>
             <Link href="/login" className="hover:text-white transition-colors">Sign In</Link>
           </nav>

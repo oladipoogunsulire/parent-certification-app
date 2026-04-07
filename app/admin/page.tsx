@@ -17,7 +17,7 @@ export default async function AdminPage() {
           <p className="text-3xl font-bold text-primary mt-1">{userCount}</p>
         </div>
         <div className="bg-white rounded-lg border border-gray-100 border-l-4 border-l-accent shadow-sm p-6">
-          <p className="text-sm text-foreground/60">Active tracks</p>
+          <p className="text-sm text-foreground/60">Active Modules</p>
           <p className="text-3xl font-bold text-primary mt-1">{trackCount}</p>
         </div>
         <div className="bg-white rounded-lg border border-gray-100 border-l-4 border-l-accent shadow-sm p-6">
@@ -28,8 +28,8 @@ export default async function AdminPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <a href="/admin/tracks" className="bg-white rounded-lg border border-gray-100 shadow-sm p-6 hover:border-accent transition-colors">
-          <h3 className="font-semibold text-primary">Manage Tracks</h3>
-          <p className="text-sm text-foreground/60 mt-1">Create and edit certification tracks, belts, modules and lessons</p>
+          <h3 className="font-semibold text-primary">Manage Modules</h3>
+          <p className="text-sm text-foreground/60 mt-1">Create and edit certification modules, belts, lessons and scenarios</p>
         </a>
         <a href="/admin/users" className="bg-white rounded-lg border border-gray-100 shadow-sm p-6 hover:border-accent transition-colors">
           <h3 className="font-semibold text-primary">Manage Users</h3>
