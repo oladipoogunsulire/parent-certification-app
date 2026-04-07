@@ -85,7 +85,7 @@ export default async function AdminTracksPage() {
                       </Link>
                       <DeleteButton
                         url={`/api/admin/tracks/${track.id}`}
-                        confirmMessage={`Delete module "${track.trackName}"? This will permanently delete all lessons, scenarios, questions, and certifications for this module.`}
+                        confirmMessage={`Delete module "${track.trackName}"? This will permanently delete all lessons, scenarios, questions, and belts for this module.`}
                         redirectTo="/admin/tracks"
                         label="Delete"
                         className="text-sm text-red-600 hover:underline"

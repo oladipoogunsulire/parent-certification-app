@@ -46,7 +46,7 @@ export default async function AppHeader() {
     <header className="relative bg-white border-b border-gray-100 shadow-sm">
       <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-3">
         <a href="/" className="text-xl font-bold text-primary shrink-0">
-          Parent Certification
+          The Ultimate Influencer™
         </a>
 
         {/* Desktop nav */}

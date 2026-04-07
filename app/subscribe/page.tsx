@@ -35,10 +35,10 @@ export default function SubscribePage() {
       <div className="max-w-4xl w-full">
         <div className="text-center mb-10">
           <h1 className="text-3xl font-bold text-gray-900">
-            Start your certification journey
+            Start your influence journey
           </h1>
           <p className="text-gray-600 mt-2">
-            Full access to all modules, belt exams, and public certification
+            Full access to all modules, belt exams, and public verification
           </p>
         </div>
 
@@ -50,9 +50,9 @@ export default function SubscribePage() {
               <span className="text-gray-500">/month</span>
             </div>
             <ul className="space-y-3 mb-8 text-sm text-gray-600">
-              <li>✓ Full access to all certification modules</li>
+              <li>✓ Full access to all influence modules</li>
               <li>✓ Belt exams and progression</li>
-              <li>✓ Black Belt certification</li>
+              <li>✓ Black Belt mastery</li>
               <li>✓ Public verification page</li>
               <li>✓ Cancel anytime</li>
             </ul>

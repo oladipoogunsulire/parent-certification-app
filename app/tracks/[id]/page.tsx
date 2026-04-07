@@ -50,7 +50,7 @@ export default async function TrackDetailPage({
       <header className="bg-white border-b border-gray-100 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <a href="/" className="text-xl font-bold text-primary">
-            Parent Certification
+            The Ultimate Influencer™
           </a>
           <div className="flex items-center gap-4">
             <a href="/tracks" className="text-sm text-foreground/70 hover:text-foreground transition-colors">
@@ -131,7 +131,7 @@ export default async function TrackDetailPage({
                     </h3>
                     <p className="text-xs text-foreground/50">
                       Pass threshold: {belt.passingThreshold}%
-                      {belt.expirable && " · Certification expires annually"}
+                      {belt.expirable && " · Belt expires annually"}
                     </p>
                   </div>
                 </div>

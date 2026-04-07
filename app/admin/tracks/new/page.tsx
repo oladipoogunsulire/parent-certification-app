@@ -111,7 +111,7 @@ export default function NewTrackPage() {
             min={1}
             max={60}
           />
-          <p className="text-xs text-gray-500 mt-1">How long before Black Belt certification expires and requires renewal</p>
+          <p className="text-xs text-gray-500 mt-1">How long before Black Belt mastery expires and requires renewal</p>
         </div>
 
         <div className="flex gap-3 pt-2">

@@ -169,7 +169,7 @@ export default function EditTrackForm({ trackId, initial }: Props) {
             <option value="HYBRID">Hybrid (exam + CE)</option>
           </select>
           <p className="text-xs text-gray-500 mt-1">
-            How Black Belt holders renew their certification
+            How Black Belt holders renew their mastery
           </p>
         </div>
 

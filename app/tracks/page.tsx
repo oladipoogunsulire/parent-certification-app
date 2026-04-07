@@ -22,7 +22,7 @@ export default async function TracksPage() {
 
       <main className="max-w-6xl mx-auto px-4 py-8">
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-primary">Certification Modules</h2>
+          <h2 className="text-2xl font-bold text-primary">Influence Modules</h2>
           <p className="text-foreground/60 mt-1">
             Choose a module to begin your parenting journey.
           </p>

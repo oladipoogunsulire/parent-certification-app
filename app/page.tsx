@@ -207,7 +207,7 @@ export default function HomePage() {
               },
               {
                 icon: "🏅",
-                title: "Belt-Based Certification",
+                title: "Belt-Based Mastery",
                 desc: "Progress through White to Black Belt as you complete modules and demonstrate mastery.",
               },
             ].map((pillar) => (
@@ -425,7 +425,7 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col items-center gap-5">
           {/* Brand */}
           <div className="text-center">
-            <p className="text-white font-bold text-base">Parent Certification</p>
+            <p className="text-white font-bold text-base">The Ultimate Influencer™</p>
             <p className="text-white/40 text-sm mt-1">The Premium Preventive Parenting Platform</p>
             <p className="text-white/40 text-sm">Parenting Today. Raising Tomorrow&apos;s Champions.</p>
           </div>
@@ -440,7 +440,7 @@ export default function HomePage() {
 
           {/* Copyright */}
           <p className="text-white/30 text-xs text-center">
-            © 2026 Parent Certification. All rights reserved.
+            © 2026 The Ultimate Influencer™. All rights reserved.
           </p>
         </div>
       </footer>

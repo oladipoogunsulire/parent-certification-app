@@ -125,7 +125,7 @@ export default function ExamClient({ trackId, beltId, beltLevel, questions }: Pr
           </p>
           {result.passed && (
             <p className="text-sm text-green-700 mt-3 font-medium">
-              Your certification has been issued. View it on your dashboard.
+              Your belt has been earned. View it on your dashboard.
             </p>
           )}
         </div>

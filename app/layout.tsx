@@ -8,8 +8,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Parent Certification",
-  description: "Structured parenting certification program",
+  title: "The Ultimate Influencer™",
+  description: "The Premium Preventive Parenting Platform — training parents to lead with intention.",
 };
 
 export default function RootLayout({

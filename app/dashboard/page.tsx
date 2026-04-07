@@ -44,16 +44,16 @@ export default async function DashboardPage() {
             Welcome back, {firstName}!
           </h2>
           <p className="text-foreground/60 mt-1">
-            Continue your parenting certification journey.
+            Continue your influence journey.
           </p>
         </div>
 
         {!hasActiveSubscription && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
-              <h3 className="font-semibold text-blue-900">Start your certification</h3>
+              <h3 className="font-semibold text-blue-900">Start your journey</h3>
               <p className="text-blue-700 text-sm mt-1">
-                Subscribe to access full module content, belt exams, and certification.
+                Subscribe to access full module content, belt exams, and belt mastery.
               </p>
             </div>
             <a href="/subscribe" className="self-start sm:w-auto w-full text-center inline-block mt-0 bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary-hover transition-colors">
@@ -63,7 +63,7 @@ export default async function DashboardPage() {
         )}
 
         <div className="mb-8">
-          <h3 className="text-lg font-semibold text-primary mb-4">Certification Modules</h3>
+          <h3 className="text-lg font-semibold text-primary mb-4">Influence Modules</h3>
           {(user?.certifications.length ?? 0) === 0 ? (
             <div className="bg-white rounded-lg border border-gray-100 shadow-sm p-10 text-center">
               <div className="text-4xl mb-3">🎯</div>
@@ -106,7 +106,7 @@ export default async function DashboardPage() {
             </p>
           </div>
           <div className="bg-white rounded-lg border border-gray-100 border-l-4 border-l-accent shadow-sm p-6">
-            <p className="text-sm text-foreground/60">Certifications earned</p>
+            <p className="text-sm text-foreground/60">Belts Earned</p>
             <p className="text-2xl font-bold text-primary mt-1">
               {user?.certifications.filter((c) => c.status === "ACTIVE").length ?? 0}
             </p>
