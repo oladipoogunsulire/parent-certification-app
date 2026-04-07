@@ -10,6 +10,51 @@ async function adminGuard() {
   return user
 }
 
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const user = await adminGuard()
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+  const { id: trackId } = await params
+
+  try {
+    const body = await req.json()
+    const {
+      trackName,
+      description,
+      ageBand,
+      curriculumVersion,
+      expiryDurationMonths,
+      renewalModelType,
+      isActive,
+    } = body
+
+    if (!trackName?.trim()) {
+      return NextResponse.json({ error: "Track name is required." }, { status: 400 })
+    }
+
+    const track = await prisma.track.update({
+      where: { id: trackId },
+      data: {
+        trackName: trackName.trim(),
+        description: description ?? null,
+        ageBand: ageBand || null,
+        curriculumVersion: curriculumVersion || "1.0",
+        expiryDurationMonths: Number(expiryDurationMonths) || 12,
+        renewalModelType: renewalModelType || "EXAM_ONLY",
+        isActive: Boolean(isActive),
+      },
+    })
+
+    return NextResponse.json(track)
+  } catch (error) {
+    console.error("Update track error:", error)
+    return NextResponse.json({ error: "Failed to update track." }, { status: 500 })
+  }
+}
+
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }

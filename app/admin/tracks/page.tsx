@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import Link from "next/link"
+import { Pencil } from "lucide-react"
 import DeleteButton from "@/app/components/DeleteButton"
 
 export default async function AdminTracksPage() {
@@ -14,10 +15,10 @@ export default async function AdminTracksPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Tracks</h2>
+        <h2 className="text-2xl font-bold text-[#1E3A5F]">Tracks</h2>
         <Link
           href="/admin/tracks/new"
-          className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
+          className="bg-[#1E3A5F] text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-[#162d4a]"
         >
           Create track
         </Link>
@@ -28,7 +29,7 @@ export default async function AdminTracksPage() {
           <p className="text-gray-500 mb-4">No tracks yet.</p>
           <Link
             href="/admin/tracks/new"
-            className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
+            className="bg-[#1E3A5F] text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-[#162d4a]"
           >
             Create your first track
           </Link>
@@ -69,8 +70,16 @@ export default async function AdminTracksPage() {
                     <div className="flex items-center gap-3">
                       <Link
                         href={`/admin/tracks/${track.id}`}
-                        className="text-sm text-blue-600 hover:underline"
+                        className="text-sm text-[#1E3A5F] hover:underline"
                       >
+                        View
+                      </Link>
+                      <Link
+                        href={`/admin/tracks/${track.id}/edit`}
+                        className="inline-flex items-center gap-1 text-sm text-[#F97316] hover:underline"
+                        title="Edit track"
+                      >
+                        <Pencil size={14} />
                         Edit
                       </Link>
                       <DeleteButton
