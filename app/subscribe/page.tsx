@@ -43,7 +43,7 @@ export default function SubscribePage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white rounded-lg border border-gray-200 p-8">
+          <div className="bg-white rounded-lg border border-gray-200 p-5 sm:p-8">
             <h2 className="text-xl font-bold text-gray-900">Monthly</h2>
             <div className="mt-4 mb-6">
               <span className="text-4xl font-bold text-gray-900">$29</span>
@@ -68,7 +68,7 @@ export default function SubscribePage() {
             </button>
           </div>
 
-          <div className="bg-white rounded-lg border-2 border-blue-600 p-8 relative">
+          <div className="bg-white rounded-lg border-2 border-blue-600 p-5 sm:p-8 relative">
             <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-xs px-3 py-1 rounded-full">
               Best value
             </div>

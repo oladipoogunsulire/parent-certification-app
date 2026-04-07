@@ -77,12 +77,12 @@ export default async function TrackDetailPage({
       <main className="max-w-4xl mx-auto px-4 py-8">
         {/* Breadcrumb + title */}
         <div className="mb-8">
-          <div className="flex items-center gap-2 text-sm text-foreground/50 mb-3">
+          <div className="flex items-center gap-2 text-sm text-foreground/50 mb-3 min-w-0">
             <a href="/tracks" className="hover:text-foreground transition-colors">
               Modules
             </a>
             <span>/</span>
-            <span className="text-foreground">{track.trackName}</span>
+            <span className="text-foreground truncate">{track.trackName}</span>
           </div>
           {track.ageBand && (
             <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-1 rounded-full">
@@ -97,7 +97,7 @@ export default async function TrackDetailPage({
 
         {/* Subscription nudge */}
         {!hasActiveSubscription && (
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-8 flex items-center justify-between">
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
               <p className="text-sm font-medium text-amber-900">
                 First module is free to preview.
@@ -138,7 +138,7 @@ export default async function TrackDetailPage({
                 {hasActiveSubscription && (
                   <a
                     href={`/tracks/${id}/belts/${belt.id}/exam`}
-                    className="flex-shrink-0 text-sm font-medium bg-primary text-white px-4 py-1.5 rounded-md hover:bg-primary-hover transition-colors"
+                    className="flex-shrink-0 text-sm font-medium bg-primary text-white px-4 py-1.5 rounded-md hover:bg-primary-hover transition-colors min-h-[44px] flex items-center"
                   >
                     Take exam
                   </a>

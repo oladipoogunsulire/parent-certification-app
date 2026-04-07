@@ -1,6 +1,7 @@
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import UserMenu from "./UserMenu"
+import MobileNavToggle from "./MobileNavToggle"
 
 export default async function AppHeader() {
   const session = await auth()
@@ -42,12 +43,14 @@ export default async function AppHeader() {
   }
 
   return (
-    <header className="bg-white border-b border-gray-100 shadow-sm">
-      <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-        <a href="/" className="text-xl font-bold text-primary">
+    <header className="relative bg-white border-b border-gray-100 shadow-sm">
+      <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-3">
+        <a href="/" className="text-xl font-bold text-primary shrink-0">
           Parent Certification
         </a>
-        <nav className="flex items-center gap-4">
+
+        {/* Desktop nav */}
+        <nav className="hidden md:flex items-center gap-4">
           <a href="/tracks" className="text-sm text-foreground/70 hover:text-foreground transition-colors">
             Modules
           </a>
@@ -62,6 +65,15 @@ export default async function AppHeader() {
             </a>
           )}
         </nav>
+
+        {/* Mobile: show UserMenu (avatar) if logged in, then hamburger */}
+        <div className="flex md:hidden items-center gap-2">
+          {userProps && <UserMenu {...userProps} />}
+          <MobileNavToggle
+            isLoggedIn={!!userProps}
+            isAdmin={userProps?.isAdmin ?? false}
+          />
+        </div>
       </div>
     </header>
   )

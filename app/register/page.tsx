@@ -46,8 +46,8 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-sm border border-gray-100 p-8">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8">
+      <div className="max-w-md w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6 sm:p-8">
         <h1 className="text-2xl font-bold text-primary mb-2">Create your account</h1>
         <p className="text-foreground/60 mb-8">Start your certification journey</p>
 
@@ -58,7 +58,7 @@ export default function RegisterPage() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">
                 First name
@@ -119,7 +119,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-primary text-white py-2 px-4 rounded-md text-sm font-medium hover:bg-primary-hover disabled:opacity-50 transition-colors"
+            className="w-full bg-primary text-white py-3 px-4 rounded-md text-sm font-medium hover:bg-primary-hover disabled:opacity-50 transition-colors"
           >
             {loading ? "Creating account..." : "Create account"}
           </button>
@@ -137,7 +137,7 @@ export default function RegisterPage() {
 
           <button
             onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
-            className="mt-4 w-full border border-primary text-primary py-2 px-4 rounded-md text-sm font-medium hover:bg-primary hover:text-white transition-colors"
+            className="mt-4 w-full border border-primary text-primary py-3 px-4 rounded-md text-sm font-medium hover:bg-primary hover:text-white transition-colors"
           >
             Continue with Google
           </button>

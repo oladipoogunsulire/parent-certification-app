@@ -1,5 +1,6 @@
 import Link from "next/link"
 import Image from "next/image"
+import HomeNav from "@/app/components/HomeNav"
 
 // ─── data ────────────────────────────────────────────────────────────────────
 
@@ -116,36 +117,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-background font-sans" style={{ scrollBehavior: "smooth" }}>
 
-      {/* ── SECTION 1: Navbar ─────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
-          {/* Brand */}
-          <Link href="/" className="text-lg font-bold text-primary shrink-0">
-            Parent Certification
-          </Link>
-
-          {/* Nav links — hidden on small screens */}
-          <nav className="hidden md:flex items-center gap-6 text-sm">
-            <Link href="/tracks" className="text-foreground/70 hover:text-foreground transition-colors">
-              Modules
-            </Link>
-            <Link href="/subscribe" className="text-foreground/70 hover:text-foreground transition-colors">
-              Pricing
-            </Link>
-            <Link href="/login" className="text-foreground/70 hover:text-foreground transition-colors">
-              Sign In
-            </Link>
-          </nav>
-
-          {/* CTA */}
-          <Link
-            href="/register"
-            className="bg-accent text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-accent-hover transition-colors shrink-0"
-          >
-            Get Started Free
-          </Link>
-        </div>
-      </header>
+      <HomeNav />
 
       {/* ── SECTION 2: Hero ───────────────────────────────────────────────── */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16 md:py-24 flex flex-col-reverse md:flex-row items-center gap-12">
@@ -159,16 +131,16 @@ export default function HomePage() {
             to become the parent your child needs — and the ultimate influence in their life.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start mb-6">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start mb-6 w-full">
             <Link
               href="/register"
-              className="bg-accent text-white font-semibold px-7 py-3 rounded-lg hover:bg-accent-hover transition-colors text-center"
+              className="w-full sm:w-auto bg-accent text-white font-semibold px-7 py-3 rounded-lg hover:bg-accent-hover transition-colors text-center"
             >
               Start Your Journey Free
             </Link>
             <a
               href="#how-it-works"
-              className="bg-white text-primary border border-primary font-semibold px-7 py-3 rounded-lg hover:bg-primary/5 transition-colors text-center"
+              className="w-full sm:w-auto bg-white text-primary border border-primary font-semibold px-7 py-3 rounded-lg hover:bg-primary/5 transition-colors text-center"
             >
               See How It Works
             </a>

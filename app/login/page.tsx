@@ -33,8 +33,8 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-sm border border-gray-100 p-8">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8">
+      <div className="max-w-md w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6 sm:p-8">
         <h1 className="text-2xl font-bold text-primary mb-2">Welcome back</h1>
         <p className="text-foreground/60 mb-8">Sign in to your account</p>
 
@@ -82,7 +82,7 @@ function LoginForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-primary text-white py-2 px-4 rounded-md text-sm font-medium hover:bg-primary-hover disabled:opacity-50 transition-colors"
+            className="w-full bg-primary text-white py-3 px-4 rounded-md text-sm font-medium hover:bg-primary-hover disabled:opacity-50 transition-colors"
           >
             {loading ? "Signing in..." : "Sign in"}
           </button>
@@ -100,7 +100,7 @@ function LoginForm() {
 
           <button
             onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
-            className="mt-4 w-full border border-primary text-primary py-2 px-4 rounded-md text-sm font-medium hover:bg-primary hover:text-white transition-colors"
+            className="mt-4 w-full border border-primary text-primary py-3 px-4 rounded-md text-sm font-medium hover:bg-primary hover:text-white transition-colors"
           >
             Continue with Google
           </button>

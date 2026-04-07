@@ -49,12 +49,14 @@ export default async function DashboardPage() {
         </div>
 
         {!hasActiveSubscription && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
-            <h3 className="font-semibold text-blue-900">Start your certification</h3>
-            <p className="text-blue-700 text-sm mt-1">
-              Subscribe to access full module content, belt exams, and certification.
-            </p>
-            <a href="/subscribe" className="inline-block mt-3 bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary-hover transition-colors">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div>
+              <h3 className="font-semibold text-blue-900">Start your certification</h3>
+              <p className="text-blue-700 text-sm mt-1">
+                Subscribe to access full module content, belt exams, and certification.
+              </p>
+            </div>
+            <a href="/subscribe" className="self-start sm:w-auto w-full text-center inline-block mt-0 bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary-hover transition-colors">
               View plans — from $29/month
             </a>
           </div>
