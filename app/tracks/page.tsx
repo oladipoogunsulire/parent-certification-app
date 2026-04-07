@@ -22,15 +22,15 @@ export default async function TracksPage() {
 
       <main className="max-w-6xl mx-auto px-4 py-8">
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-primary">Certification Tracks</h2>
+          <h2 className="text-2xl font-bold text-primary">Certification Modules</h2>
           <p className="text-foreground/60 mt-1">
-            Choose a track to begin your structured parenting certification journey.
+            Choose a module to begin your parenting journey.
           </p>
         </div>
 
         {tracks.length === 0 ? (
           <div className="bg-white rounded-lg border border-gray-100 shadow-sm p-12 text-center">
-            <p className="text-foreground/50">No tracks available yet. Check back soon.</p>
+            <p className="text-foreground/50">No modules available yet. Check back soon.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -32,7 +32,7 @@ export async function PATCH(
     } = body
 
     if (!trackName?.trim()) {
-      return NextResponse.json({ error: "Track name is required." }, { status: 400 })
+      return NextResponse.json({ error: "Module name is required." }, { status: 400 })
     }
 
     const track = await prisma.track.update({
@@ -51,7 +51,7 @@ export async function PATCH(
     return NextResponse.json(track)
   } catch (error) {
     console.error("Update track error:", error)
-    return NextResponse.json({ error: "Failed to update track." }, { status: 500 })
+    return NextResponse.json({ error: "Failed to update module." }, { status: 500 })
   }
 }
 
@@ -120,6 +120,6 @@ export async function DELETE(
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Delete track error:", error)
-    return NextResponse.json({ error: "Failed to delete track." }, { status: 500 })
+    return NextResponse.json({ error: "Failed to delete module." }, { status: 500 })
   }
 }

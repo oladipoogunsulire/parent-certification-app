@@ -54,7 +54,7 @@ export default async function ExamPage({
             href={`/tracks/${trackId}`}
             className="text-sm text-gray-600 hover:text-gray-900"
           >
-            ← Back to track
+            ← Back to module
           </a>
           <div className="text-sm text-gray-500">
             <span className="font-medium">{belt.beltLevel} Belt Exam</span>
@@ -82,7 +82,7 @@ export default async function ExamPage({
               href={`/tracks/${trackId}`}
               className="inline-block mt-4 text-sm text-blue-600 hover:underline"
             >
-              Back to track
+              Back to module
             </a>
           </div>
         ) : (

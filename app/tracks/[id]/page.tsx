@@ -54,7 +54,7 @@ export default async function TrackDetailPage({
           </a>
           <div className="flex items-center gap-4">
             <a href="/tracks" className="text-sm text-foreground/70 hover:text-foreground transition-colors">
-              All tracks
+              All Modules
             </a>
             {session?.user ? (
               <>
@@ -79,7 +79,7 @@ export default async function TrackDetailPage({
         <div className="mb-8">
           <div className="flex items-center gap-2 text-sm text-foreground/50 mb-3">
             <a href="/tracks" className="hover:text-foreground transition-colors">
-              Tracks
+              Modules
             </a>
             <span>/</span>
             <span className="text-foreground">{track.trackName}</span>

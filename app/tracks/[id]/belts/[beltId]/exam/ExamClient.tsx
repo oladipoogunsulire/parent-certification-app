@@ -189,7 +189,7 @@ export default function ExamClient({ trackId, beltId, beltLevel, questions }: Pr
             href={`/tracks/${trackId}`}
             className="border border-gray-300 text-gray-700 px-5 py-2 rounded-md text-sm font-medium hover:bg-gray-50"
           >
-            Back to track
+            Back to module
           </a>
         </div>
       </div>

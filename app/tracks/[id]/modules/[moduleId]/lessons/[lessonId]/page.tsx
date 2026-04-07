@@ -86,7 +86,7 @@ export default async function LessonPage({
                 d="M15 19l-7-7 7-7"
               />
             </svg>
-            Back to track
+            Back to module
           </a>
           <div className="text-sm text-gray-500 text-right hidden sm:block">
             <span className="font-medium">{lesson.module.belt.beltLevel} Belt</span>

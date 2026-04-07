@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     const { trackName, description, ageBand, expiryDurationMonths } = await req.json()
 
     if (!trackName) {
-      return NextResponse.json({ error: "Track name is required." }, { status: 400 })
+      return NextResponse.json({ error: "Module name is required." }, { status: 400 })
     }
 
     // Create track with default belt structure
