@@ -1,65 +1,190 @@
 import Link from "next/link"
 import Image from "next/image"
 
+// ─── data ────────────────────────────────────────────────────────────────────
+
+const modules = [
+  {
+    belt: "WHITE",
+    label: "WHITE Belt — Foundation",
+    dot: "bg-gray-200 border border-gray-400",
+    card: "bg-white border-gray-200",
+    badge: "bg-gray-100 text-gray-700",
+    items: [
+      {
+        num: 1,
+        title: "Parenting Is Influence Science",
+        desc: "Master the core principle: you are your child's most powerful influence.",
+      },
+    ],
+  },
+  {
+    belt: "YELLOW",
+    label: "YELLOW Belt — Early Years",
+    dot: "bg-yellow-400",
+    card: "bg-yellow-50 border-yellow-200",
+    badge: "bg-yellow-100 text-yellow-800",
+    items: [
+      {
+        num: 2,
+        title: "Early Childhood (0–5 Years)",
+        desc: "Build the foundation of attachment, wiring and early boundaries.",
+      },
+    ],
+  },
+  {
+    belt: "GREEN",
+    label: "GREEN Belt — Growing Years",
+    dot: "bg-green-500",
+    card: "bg-green-50 border-green-200",
+    badge: "bg-green-100 text-green-800",
+    items: [
+      {
+        num: 3,
+        title: "School Age (6–10 Years)",
+        desc: "Navigate identity formation, trust building and social coaching.",
+      },
+    ],
+  },
+  {
+    belt: "BLUE",
+    label: "BLUE Belt — Transition Years",
+    dot: "bg-blue-500",
+    card: "bg-blue-50 border-blue-200",
+    badge: "bg-blue-100 text-blue-800",
+    items: [
+      {
+        num: 4,
+        title: "Preteen (11–13 Years)",
+        desc: "Guide your child through one of the most critical developmental transitions.",
+      },
+      {
+        num: 5,
+        title: "Teen (14–17 Years)",
+        desc: "Support autonomy, identity and the shift toward independence.",
+      },
+    ],
+  },
+  {
+    belt: "BROWN",
+    label: "BROWN Belt — Advanced Influence",
+    dot: "bg-amber-600",
+    card: "bg-amber-50 border-amber-200",
+    badge: "bg-amber-100 text-amber-800",
+    items: [
+      {
+        num: 6,
+        title: "Discipline, Resilience & Grit (DRG™ Framework)",
+        desc: "A dedicated framework for raising children with strength, bounce-back ability and character.",
+      },
+      {
+        num: 7,
+        title: "Early Warning Signs",
+        desc: "Recognise the signals that require early intervention before patterns become problems.",
+      },
+      {
+        num: 8,
+        title: "Consequences: Discipline as Direction",
+        desc: "Transform consequences from punishment into powerful teaching moments.",
+      },
+      {
+        num: 9,
+        title: "Empathy and Service",
+        desc: "Raise children who understand others, contribute meaningfully and lead with compassion.",
+      },
+    ],
+  },
+  {
+    belt: "BLACK",
+    label: "BLACK Belt — Mastery",
+    dot: "bg-gray-900",
+    card: "bg-gray-900 border-gray-700",
+    badge: "bg-white/10 text-white",
+    items: [
+      {
+        num: 10,
+        title: "Pre-Parent Young Adults",
+        desc: "The integrative module — preparing the next generation to parent with intention before they begin.",
+      },
+    ],
+  },
+]
+
+// ─── page ─────────────────────────────────────────────────────────────────────
+
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-[#FAFAFA] font-sans">
+    <div className="min-h-screen bg-background font-sans" style={{ scrollBehavior: "smooth" }}>
 
-      {/* ── Navbar ── */}
-      <header className="bg-white border-b border-[#e2e8f0]">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-full bg-[#1E3A5F] flex items-center justify-center flex-shrink-0">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
-            </div>
-            <span className="text-lg font-semibold text-[#1E293B]">Parent Certification</span>
+      {/* ── SECTION 1: Navbar ─────────────────────────────────────────────── */}
+      <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
+          {/* Brand */}
+          <Link href="/" className="text-lg font-bold text-primary shrink-0">
+            Parent Certification
           </Link>
-          <div className="flex items-center gap-4">
-            <Link href="/login" className="text-sm text-[#64748b] hover:text-[#1E293B]">
+
+          {/* Nav links — hidden on small screens */}
+          <nav className="hidden md:flex items-center gap-6 text-sm">
+            <Link href="/tracks" className="text-foreground/70 hover:text-foreground transition-colors">
+              Modules
+            </Link>
+            <Link href="/subscribe" className="text-foreground/70 hover:text-foreground transition-colors">
+              Pricing
+            </Link>
+            <Link href="/login" className="text-foreground/70 hover:text-foreground transition-colors">
               Sign In
             </Link>
-            <Link
-              href="/register"
-              className="text-sm font-medium bg-[#F97316] text-white px-4 py-2 rounded-lg hover:bg-[#ea6c0a] transition-colors"
-            >
-              Get Started
-            </Link>
-          </div>
+          </nav>
+
+          {/* CTA */}
+          <Link
+            href="/register"
+            className="bg-accent text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-accent-hover transition-colors shrink-0"
+          >
+            Get Started Free
+          </Link>
         </div>
       </header>
 
-      {/* ── Hero ── */}
-      <section className="max-w-6xl mx-auto px-6 py-24 flex flex-col md:flex-row items-center gap-12">
-        <div className="flex-1">
-          <h1 className="text-5xl md:text-6xl font-bold text-[#1E293B] leading-tight mb-6">
-            Become the<br />parent your<br />child deserves
+      {/* ── SECTION 2: Hero ───────────────────────────────────────────────── */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16 md:py-24 flex flex-col-reverse md:flex-row items-center gap-12">
+        {/* Copy */}
+        <div className="flex-1 text-center md:text-left">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-primary leading-tight mb-6">
+            You Are Your Child&apos;s Most<br className="hidden sm:block" /> Powerful Influence
           </h1>
-          <p className="text-[#64748b] text-lg leading-relaxed mb-8 max-w-md">
-            Structured certification modules that help you build real parenting skills — at your own pace.
+          <p className="text-foreground/70 text-lg leading-relaxed mb-8 max-w-xl mx-auto md:mx-0">
+            Most parents react. The best ones lead with intention. The Influence Lab is where you train
+            to become the parent your child needs — and the ultimate influence in their life.
           </p>
-          <div className="flex flex-wrap gap-3">
+
+          <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start mb-6">
             <Link
               href="/register"
-              className="bg-[#F97316] text-white px-6 py-3 rounded-lg font-medium hover:bg-[#ea6c0a] transition-colors"
+              className="bg-accent text-white font-semibold px-7 py-3 rounded-lg hover:bg-accent-hover transition-colors text-center"
             >
-              Get Started Free
+              Start Your Journey Free
             </Link>
-            <Link
-              href="/subscribe"
-              className="bg-white text-[#1E293B] border border-[#e2e8f0] px-6 py-3 rounded-lg font-medium hover:bg-[#f1f5f9] transition-colors"
+            <a
+              href="#how-it-works"
+              className="bg-white text-primary border border-primary font-semibold px-7 py-3 rounded-lg hover:bg-primary/5 transition-colors text-center"
             >
-              View Plans
-            </Link>
+              See How It Works
+            </a>
           </div>
+
+          <p className="text-sm text-foreground/50 max-w-md mx-auto md:mx-0">
+            Join the Premium Preventive Parenting Platform — built for parents who want to lead, not just react.
+          </p>
         </div>
-        <div className="flex-1 flex justify-center md:justify-end">
-          <div className="relative w-full max-w-[480px] aspect-[4/3] rounded-2xl overflow-hidden shadow-sm">
+
+        {/* Hero image */}
+        <div className="flex-1 w-full">
+          <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden shadow-lg">
             <Image
               src="/image/FAMILYimage.png"
-              alt="Happy family together"
+              alt="Family together — parents leading with intention"
               fill
               className="object-cover"
               priority
@@ -68,138 +193,283 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── How It Works ── */}
-      <section className="max-w-6xl mx-auto px-6 py-20">
-        <h2 className="text-4xl font-bold text-[#1E293B] text-center mb-3">How It Works</h2>
-        <p className="text-[#64748b] text-center mb-12">
-          A simple three-step journey to becoming a more confident parent
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[
-            {
-              num: "1",
-              icon: (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-                </svg>
-              ),
-              title: "Choose your module",
-              desc: "Select from specialized parenting modules designed for your family's unique needs.",
-            },
-            {
-              num: "2",
-              icon: (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10" />
-                  <circle cx="12" cy="12" r="6" />
-                  <circle cx="12" cy="12" r="2" />
-                </svg>
-              ),
-              title: "Complete modules",
-              desc: "Learn through engaging video lessons, practical exercises, and real-world scenarios.",
-            },
-            {
-              num: "3",
-              icon: (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="8" r="6" />
-                  <path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11" />
-                </svg>
-              ),
-              title: "Earn your certification",
-              desc: "Receive recognized certifications that validate your parenting expertise.",
-            },
-          ].map((step) => (
-            <div key={step.num} className="bg-[#f1f5f9] rounded-2xl p-8 relative">
-              <span className="absolute top-5 right-6 text-3xl font-bold text-[#cbd5e1]">{step.num}</span>
-              <div className="w-12 h-12 rounded-full bg-[#e2e8f0] flex items-center justify-center text-[#1E3A5F] mb-5">
-                {step.icon}
-              </div>
-              <h3 className="text-lg font-semibold text-[#1E293B] mb-2">{step.title}</h3>
-              <p className="text-[#64748b] text-sm leading-relaxed">{step.desc}</p>
-            </div>
-          ))}
+      {/* ── SECTION 3: Trust Strip ────────────────────────────────────────── */}
+      <section className="bg-primary/5 border-y border-primary/10 py-4">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <p className="text-center text-sm text-primary font-medium flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-6 leading-relaxed">
+            <span>🏅 Developed with Child Development Expertise</span>
+            <span className="hidden sm:inline text-primary/30">·</span>
+            <span>🌍 The Premium Preventive Parenting Platform</span>
+            <span className="hidden sm:inline text-primary/30">·</span>
+            <span>⭐ Parenting Today. Raising Tomorrow&apos;s Champions.</span>
+          </p>
         </div>
       </section>
 
-      {/* ── What You'll Learn ── */}
-      <section className="max-w-6xl mx-auto px-6 py-20">
-        <h2 className="text-4xl font-bold text-[#1E293B] text-center mb-3">What You&apos;ll Learn</h2>
-        <p className="text-[#64748b] text-center mb-12">
-          Progress through our structured belt system, building skills at each level
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[
-            { belt: "White Belt", desc: "Foundations of positive parenting",      bg: "bg-white",        border: "border-gray-200",   title: "text-gray-800",    sub: "text-gray-500" },
-            { belt: "Yellow Belt", desc: "Communication & emotional intelligence", bg: "bg-yellow-50",   border: "border-yellow-400", title: "text-yellow-700",  sub: "text-yellow-600" },
-            { belt: "Orange Belt", desc: "Discipline strategies & boundaries",     bg: "bg-orange-50",   border: "border-orange-400", title: "text-orange-700",  sub: "text-orange-600" },
-            { belt: "Green Belt",  desc: "Building resilience & independence",     bg: "bg-green-50",    border: "border-green-400",  title: "text-green-700",   sub: "text-green-600" },
-            { belt: "Blue Belt",   desc: "Advanced conflict resolution",           bg: "bg-blue-50",     border: "border-blue-400",   title: "text-blue-700",    sub: "text-blue-600" },
-            { belt: "Black Belt",  desc: "Mastery & mentorship",                   bg: "bg-gray-900",    border: "border-gray-900",   title: "text-white",       sub: "text-gray-400" },
-          ].map((item) => (
-            <div key={item.belt} className={`${item.bg} border-2 ${item.border} rounded-2xl p-6`}>
-              <h3 className={`text-lg font-semibold ${item.title} mb-1`}>{item.belt}</h3>
-              <p className={`text-sm ${item.sub}`}>{item.desc}</p>
-            </div>
-          ))}
-        </div>
-        <p className="text-[#64748b] text-center mt-10 max-w-2xl mx-auto">
-          Each belt includes video lessons, quizzes, practical assignments, and a final assessment to earn your certification.
-        </p>
-      </section>
-
-      {/* ── Pricing teaser ── */}
+      {/* ── SECTION 4: What Is The Influence Lab ────────────────────────────── */}
       <section className="bg-white py-20">
-        <div className="max-w-6xl mx-auto px-6 text-center">
-          <h2 className="text-4xl font-bold text-[#1E293B] mb-4">Affordable Plans for Every Family</h2>
-          <p className="text-[#64748b] text-lg mb-8">
-            Plans from <span className="font-bold text-[#F97316]">$29/month</span> — invest in your family&apos;s future today.
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="max-w-3xl mx-auto text-center mb-14">
+            <h2 className="text-3xl sm:text-4xl font-bold text-primary mb-5">
+              This Is Not A Course. It&apos;s A Training System.
+            </h2>
+            <p className="text-foreground/70 text-lg leading-relaxed">
+              Traditional parenting content tells you what to do. The Influence Lab trains you to observe,
+              decide, act and grow. Through scenario-based modules, real-world challenges and a measurable
+              Influence Score, you will develop the skills that shape your child&apos;s character, confidence
+              and future — one decision at a time.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              {
+                icon: "🎯",
+                title: "Practice-Based Learning",
+                desc: "Every module puts you in real parenting situations. You decide. You get feedback. You improve.",
+              },
+              {
+                icon: "📊",
+                title: "Measurable Skill Progression",
+                desc: "Your Influence Score tracks the quality of your decisions — not just whether you showed up.",
+              },
+              {
+                icon: "🏅",
+                title: "Belt-Based Certification",
+                desc: "Progress through White to Black Belt as you complete modules and demonstrate mastery.",
+              },
+            ].map((pillar) => (
+              <div
+                key={pillar.title}
+                className="bg-background rounded-xl border border-gray-100 p-7 shadow-sm"
+              >
+                <div className="text-4xl mb-4">{pillar.icon}</div>
+                <h3 className="font-bold text-primary text-lg mb-2">{pillar.title}</h3>
+                <p className="text-foreground/60 text-sm leading-relaxed">{pillar.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── SECTION 5: How It Works ───────────────────────────────────────── */}
+      <section id="how-it-works" className="bg-background py-20">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-14">
+            <h2 className="text-3xl sm:text-4xl font-bold text-primary mb-3">
+              Your Path to Becoming The Ultimate Influencer™
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                step: "1",
+                title: "Enter The Influence Lab",
+                desc: "Choose your first module and begin your parenting influence journey. No overwhelm — just one focused topic at a time.",
+              },
+              {
+                step: "2",
+                title: "Train Through Real Scenarios",
+                desc: "Every module puts you in real parenting situations. You decide. You receive feedback. You grow. This is not reading — it is practice.",
+              },
+              {
+                step: "3",
+                title: "Earn Your Influence Score",
+                desc: "As you complete modules and scenarios, your Influence Score grows. Watch yourself progress from Reactive Parent all the way to Ultimate Influencer™.",
+              },
+            ].map((item) => (
+              <div key={item.step} className="relative bg-white rounded-xl border border-gray-100 shadow-sm p-8">
+                <span className="absolute top-5 right-6 text-5xl font-bold text-gray-100 select-none leading-none">
+                  {item.step}
+                </span>
+                <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center mb-5">
+                  <span className="text-accent font-bold text-sm">{item.step}</span>
+                </div>
+                <h3 className="font-bold text-primary text-xl mb-3">{item.title}</h3>
+                <p className="text-foreground/60 text-sm leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── SECTION 6: Influence Score ────────────────────────────────────── */}
+      <section className="bg-white py-20">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center">
+          <h2 className="text-3xl sm:text-4xl font-bold text-primary mb-5">
+            Where Are You On Your Influence Journey?
+          </h2>
+          <p className="text-foreground/70 text-lg leading-relaxed max-w-2xl mx-auto mb-12">
+            Your Influence Score measures the quality of your parenting decisions — not just whether you
+            finished a module. Every scenario you complete moves you forward.
+          </p>
+
+          {/* Progression row */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-0 mb-10">
+            {[
+              { emoji: "🔴", label: "Reactive Parent",    bg: "bg-red-50",    border: "border-red-200",    text: "text-red-700" },
+              { emoji: "🟡", label: "Developing Parent",  bg: "bg-yellow-50", border: "border-yellow-200", text: "text-yellow-700" },
+              { emoji: "🟢", label: "Intentional Parent", bg: "bg-green-50",  border: "border-green-200",  text: "text-green-700" },
+              { emoji: "⭐", label: "Ultimate Influencer™", bg: "bg-primary/5", border: "border-primary/20", text: "text-primary" },
+            ].map((level, i, arr) => (
+              <div key={level.label} className="flex items-center">
+                <div className={`${level.bg} border ${level.border} rounded-xl px-5 py-4 text-center min-w-[148px]`}>
+                  <div className="text-3xl mb-1">{level.emoji}</div>
+                  <p className={`text-sm font-semibold ${level.text}`}>{level.label}</p>
+                </div>
+                {i < arr.length - 1 && (
+                  <div className="hidden sm:block text-gray-300 mx-2 text-xl font-light select-none">→</div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <p className="text-foreground/60 text-base max-w-2xl mx-auto">
+            Every decision you make in the Influence Lab shapes the parent you are becoming.
+            Where will you be in 30 days?
+          </p>
+        </div>
+      </section>
+
+      {/* ── SECTION 7: DRG™ Framework ─────────────────────────────────────── */}
+      <section className="bg-primary py-20">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
+          <p className="text-accent text-sm font-semibold uppercase tracking-widest mb-3">Core Curriculum</p>
+          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">
+            Introducing the DRG™ Framework
+          </h2>
+          <p className="text-white/75 text-lg leading-relaxed mb-8 max-w-2xl mx-auto">
+            Discipline. Resilience. Grit. Developed as a core pillar of the Influence Lab curriculum,
+            the DRG™ Framework gives parents a practical, proven approach to raising children with
+            strength, bounce-back ability and character that lasts a lifetime. It is not about punishment.
+            It is about direction.
           </p>
           <Link
-            href="/subscribe"
-            className="inline-block border border-[#e2e8f0] text-[#1E293B] px-8 py-3 rounded-lg font-medium hover:bg-[#f1f5f9] transition-colors"
+            href="/tracks"
+            className="inline-flex items-center gap-2 text-accent font-semibold hover:underline text-base"
           >
-            See Pricing
+            Explore the DRG™ Framework →
           </Link>
         </div>
       </section>
 
-      {/* ── CTA Banner ── */}
-      <section className="bg-[#1E3A5F] py-20">
-        <div className="max-w-6xl mx-auto px-6 text-center">
-          <h2 className="text-4xl font-bold text-white mb-4">Ready to start your journey?</h2>
-          <p className="text-[#93c5fd] text-lg mb-8">
-            Join thousands of parents who are building stronger connections with their children.
+      {/* ── SECTION 8: The Modules ────────────────────────────────────────── */}
+      <section className="bg-background py-20">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-5">
+            <h2 className="text-3xl sm:text-4xl font-bold text-primary mb-4">
+              Ten Modules. One Transformation.
+            </h2>
+            <p className="text-foreground/60 max-w-2xl mx-auto text-base leading-relaxed">
+              Each module focuses on a critical dimension of parenting influence — from your child&apos;s
+              earliest years to young adulthood. Progress through the belts as you complete each stage.
+            </p>
+          </div>
+
+          <div className="space-y-6 mt-12">
+            {modules.map((belt) => (
+              <div key={belt.belt} className={`rounded-2xl border ${belt.card} overflow-hidden`}>
+                {/* Belt header */}
+                <div className={`px-6 py-4 flex items-center gap-3 border-b ${belt.belt === "BLACK" ? "border-gray-700" : "border-inherit"}`}>
+                  <div className={`w-5 h-5 rounded-full shrink-0 ${belt.dot}`} />
+                  <h3 className={`font-bold text-sm uppercase tracking-wider ${belt.belt === "BLACK" ? "text-white" : "text-foreground"}`}>
+                    {belt.label}
+                  </h3>
+                </div>
+
+                {/* Module items */}
+                <div className={`divide-y ${belt.belt === "BLACK" ? "divide-gray-700" : "divide-gray-100"}`}>
+                  {belt.items.map((mod) => (
+                    <div key={mod.num} className="px-6 py-5 flex items-start gap-4">
+                      <span className={`shrink-0 text-xs font-bold px-2 py-1 rounded-full mt-0.5 ${belt.badge}`}>
+                        {mod.num < 10 ? `0${mod.num}` : mod.num}
+                      </span>
+                      <div>
+                        <p className={`font-semibold text-base ${belt.belt === "BLACK" ? "text-white" : "text-foreground"}`}>
+                          {mod.title}
+                        </p>
+                        <p className={`text-sm mt-1 leading-relaxed ${belt.belt === "BLACK" ? "text-white/60" : "text-foreground/55"}`}>
+                          {mod.desc}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <p className="text-center text-foreground/60 text-sm mt-10 max-w-3xl mx-auto leading-relaxed">
+            Every module includes video lessons, real-world scenarios, downloadable resources and progress
+            tracking. Complete all ten and earn your Black Belt — the mark of The Ultimate Influencer™.
+          </p>
+        </div>
+      </section>
+
+      {/* ── SECTION 9: Pricing Teaser ─────────────────────────────────────── */}
+      <section className="bg-white py-20">
+        <div className="max-w-xl mx-auto px-4 sm:px-6 text-center">
+          <h2 className="text-3xl sm:text-4xl font-bold text-primary mb-5">
+            Invest In Your Most Important Role
+          </h2>
+          <p className="text-foreground/60 text-lg leading-relaxed mb-6">
+            Full access to all modules, scenarios, resources and your personal Influence Score dashboard.
+            Cancel anytime.
+          </p>
+          <p className="text-5xl font-bold text-primary mb-2">$29</p>
+          <p className="text-foreground/50 text-base mb-8">/month — Plans from $29/month</p>
+          <Link
+            href="/subscribe"
+            className="inline-block bg-primary text-white font-semibold px-8 py-3 rounded-lg hover:bg-primary-hover transition-colors"
+          >
+            View Plans &amp; Get Started
+          </Link>
+        </div>
+      </section>
+
+      {/* ── SECTION 10: Final CTA Banner ──────────────────────────────────── */}
+      <section className="bg-primary py-20">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
+          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-5 leading-snug">
+            Your Child&apos;s Future Is Shaped By You.<br className="hidden sm:block" />
+            Start Leading With Intention Today.
+          </h2>
+          <p className="text-white/70 text-lg mb-10 max-w-xl mx-auto leading-relaxed">
+            Join The Influence Lab and begin your journey to becoming The Ultimate Influencer™ in your child&apos;s life.
           </p>
           <Link
             href="/register"
-            className="inline-block border border-white text-white px-8 py-3 rounded-lg font-medium hover:bg-white hover:text-[#1E3A5F] transition-colors"
+            className="inline-block bg-accent text-white font-bold px-10 py-4 rounded-lg hover:bg-accent-hover transition-colors text-lg"
           >
-            Create Your Account
+            Create Your Free Account
           </Link>
+          <p className="text-white/40 text-sm mt-4">No credit card required to get started.</p>
         </div>
       </section>
 
-      {/* ── Footer ── */}
-      <footer className="bg-[#0f172a] py-8">
-        <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-[#1E3A5F] flex items-center justify-center flex-shrink-0">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
-            </div>
-            <span className="text-sm font-semibold text-white">Parent Certification</span>
-          </Link>
-          <nav className="flex items-center gap-6 text-sm text-[#94a3b8]">
-            <Link href="/" className="hover:text-white transition-colors">Home</Link>
+      {/* ── SECTION 11: Footer ────────────────────────────────────────────── */}
+      <footer className="bg-[#0f172a] py-10">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col items-center gap-5">
+          {/* Brand */}
+          <div className="text-center">
+            <p className="text-white font-bold text-base">Parent Certification</p>
+            <p className="text-white/40 text-sm mt-1">The Premium Preventive Parenting Platform</p>
+            <p className="text-white/40 text-sm">Parenting Today. Raising Tomorrow&apos;s Champions.</p>
+          </div>
+
+          {/* Links */}
+          <nav className="flex flex-wrap items-center justify-center gap-5 text-sm text-white/50">
             <Link href="/tracks" className="hover:text-white transition-colors">Modules</Link>
             <Link href="/subscribe" className="hover:text-white transition-colors">Pricing</Link>
             <Link href="/login" className="hover:text-white transition-colors">Sign In</Link>
+            <Link href="/register" className="hover:text-white transition-colors">Register</Link>
           </nav>
-          <p className="text-xs text-[#64748b]">© 2026 Parent Certification. All rights reserved.</p>
+
+          {/* Copyright */}
+          <p className="text-white/30 text-xs text-center">
+            © 2026 Parent Certification. All rights reserved.
+          </p>
         </div>
       </footer>
 
