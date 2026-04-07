@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { signOut } from "next-auth/react"
+import { User } from "lucide-react"
 
 type Props = {
   name: string | null
@@ -70,6 +71,14 @@ export default function UserMenu({ name, email, image, isAdmin }: Props) {
               onClick={() => setOpen(false)}
             >
               Dashboard
+            </a>
+            <a
+              href="/profile"
+              className="flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-gray-50"
+              onClick={() => setOpen(false)}
+            >
+              <User size={14} className="text-foreground/50" />
+              My Profile
             </a>
             {isAdmin && (
               <a
