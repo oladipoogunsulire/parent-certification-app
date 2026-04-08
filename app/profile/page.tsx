@@ -32,15 +32,28 @@ export default async function ProfilePage() {
 
   if (!user) redirect("/login")
 
+  // Capitalise each word in a string
+  function toTitleCase(str: string): string {
+    return str
+      .toLowerCase()
+      .split(" ")
+      .filter(Boolean)
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ")
+      .trim()
+  }
+
   // If firstName/lastName are empty (e.g. Google OAuth user), derive from name field
-  const derivedFirst =
+  const derivedFirst = toTitleCase(
     user.firstName ??
-    (user.name ? user.name.split(" ")[0] : null) ??
+    (user.name ? user.name.split(" ")[0] : "") ??
     ""
-  const derivedLast =
+  )
+  const derivedLast = toTitleCase(
     user.lastName ??
-    (user.name ? user.name.split(" ").slice(1).join(" ") : null) ??
+    (user.name ? user.name.split(" ").slice(1).join(" ") : "") ??
     ""
+  )
 
   const memberSince = new Date(user.createdAt).toLocaleDateString("en-GB", {
     month: "long",

@@ -25,7 +25,17 @@ export default function ProfileForm({ user, stats }: Props) {
   const [success, setSuccess]     = useState(false)
   const [error, setError]         = useState("")
 
-  const fullName = `${firstName} ${lastName}`.trim() || user.email
+  function toTitleCase(str: string): string {
+    return str
+      .toLowerCase()
+      .split(" ")
+      .filter(Boolean)
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ")
+      .trim()
+  }
+
+  const fullName = toTitleCase(`${firstName} ${lastName}`.trim()) || user.email
   const initials = fullName
     .split(" ")
     .filter(Boolean)

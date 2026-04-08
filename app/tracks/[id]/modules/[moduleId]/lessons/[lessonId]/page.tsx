@@ -1,6 +1,7 @@
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { notFound, redirect } from "next/navigation"
+import LessonCompleteButton from "./LessonCompleteButton"
 
 export default async function LessonPage({
   params,
@@ -57,6 +58,25 @@ export default async function LessonPage({
     }
   }
 
+  // Record visit and retrieve completed state in one upsert
+  let alreadyCompleted = false
+  try {
+    const progress = await prisma.userLessonProgress.upsert({
+      where: { userId_lessonId: { userId: session.user.id, lessonId } },
+      update: { lastVisitedAt: new Date() },
+      create: {
+        userId: session.user.id,
+        lessonId,
+        lastVisitedAt: new Date(),
+        completed: false,
+      },
+      select: { completed: true },
+    })
+    alreadyCompleted = progress.completed
+  } catch {
+    // Non-critical — don't block render
+  }
+
   // Prev / next lesson navigation within the same module
   const lessonList = lesson.module.lessons
   const currentIndex = lessonList.findIndex((l) => l.id === lessonId)
@@ -64,14 +84,29 @@ export default async function LessonPage({
   const nextLesson =
     currentIndex < lessonList.length - 1 ? lessonList[currentIndex + 1] : null
   const lessonBase = `/tracks/${id}/modules/${moduleId}/lessons`
+  const moduleHref = `/tracks/${id}`
+
+  // Progress counters for the breadcrumb area
+  const completedInModule = await prisma.userLessonProgress.count({
+    where: {
+      userId: session.user.id,
+      completed: true,
+      lesson: { moduleId },
+    },
+  })
+  const totalInModule = lessonList.length
+  const progressPct =
+    totalInModule > 0
+      ? Math.round((completedInModule / totalInModule) * 100)
+      : 0
 
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between gap-3">
           <a
-            href={`/tracks/${id}`}
-            className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
+            href={moduleHref}
+            className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1 shrink-0"
           >
             <svg
               className="w-4 h-4"
@@ -88,10 +123,13 @@ export default async function LessonPage({
             </svg>
             Back to module
           </a>
-          <div className="text-sm text-gray-500 text-right hidden sm:block">
+          <div className="text-sm text-gray-500 text-right hidden sm:block min-w-0">
             <span className="font-medium">{lesson.module.belt.beltLevel} Belt</span>
             <span className="mx-1">·</span>
-            <span>{lesson.module.moduleTitle}</span>
+            <span className="truncate">{lesson.module.moduleTitle}</span>
+            <span className="ml-2 text-xs text-gray-400">
+              {completedInModule}/{totalInModule} done ({progressPct}%)
+            </span>
           </div>
         </div>
       </header>
@@ -104,12 +142,25 @@ export default async function LessonPage({
           )}
           <span>{lesson.xpValue} XP</span>
           <span>v{lesson.versionNumber}</span>
+          <span>
+            Lesson {currentIndex + 1} of {totalInModule}
+          </span>
         </div>
 
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">{lesson.lessonTitle}</h1>
+        {/* Module progress bar */}
+        <div className="w-full bg-gray-100 rounded-full h-1.5 mb-6">
+          <div
+            className="bg-accent h-1.5 rounded-full transition-all"
+            style={{ width: `${progressPct}%` }}
+          />
+        </div>
+
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">
+          {lesson.lessonTitle}
+        </h1>
 
         {/* Lesson content */}
-        <div className="bg-white rounded-lg border border-gray-200 p-8 mb-6 text-gray-700 leading-relaxed whitespace-pre-wrap">
+        <div className="bg-white rounded-lg border border-gray-200 p-6 sm:p-8 mb-6 text-gray-700 leading-relaxed whitespace-pre-wrap">
           {lesson.contentBody}
         </div>
 
@@ -123,60 +174,68 @@ export default async function LessonPage({
           </div>
         )}
 
-        {/* Prev / Next navigation */}
-        <div className="flex items-center justify-between pt-6 border-t border-gray-200">
-          {prevLesson ? (
-            <a
-              href={`${lessonBase}/${prevLesson.id}`}
-              className="text-sm font-medium text-gray-600 hover:text-gray-900 flex items-center gap-1"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-              {prevLesson.lessonTitle}
-            </a>
-          ) : (
-            <div />
-          )}
+        {/* Completion + navigation row */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-6 border-t border-gray-200">
+          {/* Mark as Complete button */}
+          <LessonCompleteButton
+            lessonId={lessonId}
+            nextLessonHref={nextLesson ? `${lessonBase}/${nextLesson.id}` : null}
+            moduleHref={moduleHref}
+            initialCompleted={alreadyCompleted}
+          />
 
-          {nextLesson ? (
-            <a
-              href={`${lessonBase}/${nextLesson.id}`}
-              className="bg-blue-600 text-white text-sm font-medium px-5 py-2 rounded-md hover:bg-blue-700 flex items-center gap-1"
-            >
-              Next lesson
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+          {/* Prev / Next links */}
+          <div className="flex items-center gap-4 ml-auto">
+            {prevLesson && (
+              <a
+                href={`${lessonBase}/${prevLesson.id}`}
+                className="text-sm font-medium text-gray-600 hover:text-gray-900 flex items-center gap-1"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </a>
-          ) : (
-            <a
-              href={`/tracks/${id}`}
-              className="bg-green-600 text-white text-sm font-medium px-5 py-2 rounded-md hover:bg-green-700"
-            >
-              Module complete
-            </a>
-          )}
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+                Prev
+              </a>
+            )}
+            {nextLesson ? (
+              <a
+                href={`${lessonBase}/${nextLesson.id}`}
+                className="bg-primary text-white text-sm font-medium px-5 py-2 rounded-md hover:bg-primary-hover flex items-center gap-1 min-h-[44px]"
+              >
+                Next lesson
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </a>
+            ) : (
+              <a
+                href={moduleHref}
+                className="bg-green-600 text-white text-sm font-medium px-5 py-2 rounded-md hover:bg-green-700 min-h-[44px] flex items-center"
+              >
+                Back to module
+              </a>
+            )}
+          </div>
         </div>
       </main>
     </div>

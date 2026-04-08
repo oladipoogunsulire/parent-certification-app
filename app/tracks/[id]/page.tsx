@@ -1,6 +1,7 @@
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
+import { getTrackProgressMap } from "@/lib/progress"
 
 export default async function TrackDetailPage({
   params,
@@ -23,7 +24,7 @@ export default async function TrackDetailPage({
               lessons: {
                 where: { isActive: true },
                 orderBy: { createdAt: "asc" },
-                take: 1,
+                select: { id: true },
               },
             },
           },
@@ -42,8 +43,46 @@ export default async function TrackDetailPage({
     hasActiveSubscription = !!sub
   }
 
-  // Determine the globally first module across all belts (by belt orderIndex then module orderIndex)
+  // Fetch per-module progress (empty map for guests)
+  const progressMap = session?.user?.id
+    ? await getTrackProgressMap(session.user.id, id)
+    : new Map()
+
+  // Determine the globally first module (for free preview)
   const firstModule = track.belts[0]?.modules[0]
+
+  // Compute overall track progress for the top-of-page banner
+  const allModules = track.belts.flatMap((b) => b.modules)
+  const totalLessons = allModules.reduce(
+    (acc, m) => acc + (progressMap.get(m.id)?.total ?? m.lessons.length),
+    0
+  )
+  const completedLessons = allModules.reduce(
+    (acc, m) => acc + (progressMap.get(m.id)?.completed ?? 0),
+    0
+  )
+  const overallPct =
+    totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0
+  const trackStarted = session?.user?.id
+    ? allModules.some((m) => progressMap.get(m.id)?.isStarted)
+    : false
+  const trackCompleted = totalLessons > 0 && completedLessons === totalLessons
+
+  // Find most-recently visited lesson for the "Resume" button at track level
+  let resumeLessonId: string | null = null
+  let resumeModuleId: string | null = null
+  if (session?.user?.id && trackStarted) {
+    const recentProgress = await prisma.userLessonProgress.findFirst({
+      where: {
+        userId: session.user.id,
+        lesson: { module: { trackId: id } },
+      },
+      orderBy: { lastVisitedAt: "desc" },
+      select: { lessonId: true, lesson: { select: { moduleId: true } } },
+    })
+    resumeLessonId = recentProgress?.lessonId ?? null
+    resumeModuleId = recentProgress?.lesson.moduleId ?? null
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -57,16 +96,11 @@ export default async function TrackDetailPage({
               All Modules
             </a>
             {session?.user ? (
-              <>
-                <a href="/dashboard" className="text-sm text-foreground/70 hover:text-foreground transition-colors">
-                  Dashboard
-                </a>
-              </>
+              <a href="/dashboard" className="text-sm text-foreground/70 hover:text-foreground transition-colors">
+                Dashboard
+              </a>
             ) : (
-              <a
-                href="/login"
-                className="text-sm font-medium text-accent hover:underline"
-              >
+              <a href="/login" className="text-sm font-medium text-accent hover:underline">
                 Sign in
               </a>
             )}
@@ -94,6 +128,38 @@ export default async function TrackDetailPage({
             <p className="text-foreground/60 mt-2">{track.description}</p>
           )}
         </div>
+
+        {/* ── Overall progress banner (logged-in + started) ── */}
+        {session?.user && trackStarted && (
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 mb-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-sm font-medium text-foreground">
+                    {trackCompleted ? "Module complete!" : "Your progress"}
+                  </span>
+                  <span className="text-sm font-semibold text-accent">
+                    {completedLessons} / {totalLessons} lessons ({overallPct}%)
+                  </span>
+                </div>
+                <div className="w-full bg-gray-100 rounded-full h-2">
+                  <div
+                    className="bg-accent h-2 rounded-full transition-all"
+                    style={{ width: `${overallPct}%` }}
+                  />
+                </div>
+              </div>
+              {resumeLessonId && resumeModuleId && (
+                <a
+                  href={`/tracks/${id}/modules/${resumeModuleId}/lessons/${resumeLessonId}`}
+                  className="flex-shrink-0 min-h-[44px] flex items-center bg-accent text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-accent-hover transition-colors"
+                >
+                  {trackCompleted ? "Review Module" : "Resume"}
+                </a>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Subscription nudge */}
         {!hasActiveSubscription && (
@@ -151,75 +217,139 @@ export default async function TrackDetailPage({
               ) : (
                 <div className="ml-11 space-y-3">
                   {belt.modules.map((module, moduleIndex) => {
-                    const isFirstModule =
+                    const isFirstModuleInTrack =
                       beltIndex === 0 &&
                       moduleIndex === 0 &&
                       firstModule?.id === module.id
-                    const isFree = module.isFreePreview || isFirstModule
+                    const isFree = module.isFreePreview || isFirstModuleInTrack
                     const isAccessible = isFree || hasActiveSubscription
-                    const firstLesson = module.lessons[0]
-                    const href = firstLesson
-                      ? `/tracks/${id}/modules/${module.id}/lessons/${firstLesson.id}`
+                    const firstLessonId = module.lessons[0]?.id ?? null
+
+                    const prog = progressMap.get(module.id)
+                    const lessonCount = module.lessons.length
+                    const completedCount = prog?.completed ?? 0
+                    const pct = prog?.percentage ?? 0
+                    const isModuleCompleted = prog?.isCompleted ?? false
+                    const isModuleStarted = prog?.isStarted ?? false
+                    const lastLessonId = prog?.lastVisitedLessonId ?? null
+
+                    // Determine button label + href
+                    let buttonLabel = "Start"
+                    let buttonHref = firstLessonId
+                      ? `/tracks/${id}/modules/${module.id}/lessons/${firstLessonId}`
                       : null
+                    if (session?.user && isModuleCompleted) {
+                      buttonLabel = "Review"
+                    } else if (session?.user && isModuleStarted && lastLessonId) {
+                      buttonLabel = "Resume"
+                      buttonHref = `/tracks/${id}/modules/${module.id}/lessons/${lastLessonId}`
+                    }
 
                     return (
                       <div
                         key={module.id}
-                        className="bg-white rounded-lg border border-gray-100 shadow-sm p-4 flex items-center justify-between"
+                        className={`bg-white rounded-lg border shadow-sm p-4 ${
+                          isModuleCompleted
+                            ? "border-green-200"
+                            : isModuleStarted
+                            ? "border-accent/30"
+                            : "border-gray-100"
+                        }`}
                       >
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            {!isAccessible && (
-                              <svg
-                                className="w-3.5 h-3.5 text-foreground/30 flex-shrink-0"
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
-                              >
-                                <path
-                                  fillRule="evenodd"
-                                  d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-                                  clipRule="evenodd"
-                                />
-                              </svg>
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                              {!isAccessible && (
+                                <svg
+                                  className="w-3.5 h-3.5 text-foreground/30 flex-shrink-0"
+                                  fill="currentColor"
+                                  viewBox="0 0 20 20"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                              )}
+                              <h4 className="font-medium text-foreground truncate">
+                                {module.moduleTitle}
+                              </h4>
+                              {isFree && (
+                                <span className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full flex-shrink-0">
+                                  Free preview
+                                </span>
+                              )}
+                              {isModuleCompleted && (
+                                <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full flex-shrink-0 font-medium">
+                                  ✅ Completed
+                                </span>
+                              )}
+                            </div>
+                            {module.description && (
+                              <p className="text-sm text-foreground/50 truncate">
+                                {module.description}
+                              </p>
                             )}
-                            <h4 className="font-medium text-foreground truncate">
-                              {module.moduleTitle}
-                            </h4>
-                            {isFree && (
-                              <span className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full flex-shrink-0">
-                                Free preview
-                              </span>
+
+                            {/* Progress row */}
+                            {session?.user && isAccessible ? (
+                              <div className="mt-2">
+                                {isModuleStarted ? (
+                                  <>
+                                    <div className="flex items-center justify-between mb-1">
+                                      <span className="text-xs text-foreground/50">
+                                        {completedCount} of {lessonCount} lesson{lessonCount !== 1 ? "s" : ""} completed
+                                      </span>
+                                      <span className="text-xs font-medium text-accent">{pct}%</span>
+                                    </div>
+                                    <div className="w-full bg-gray-100 rounded-full h-1.5">
+                                      <div
+                                        className="bg-accent h-1.5 rounded-full transition-all"
+                                        style={{ width: `${pct}%` }}
+                                      />
+                                    </div>
+                                  </>
+                                ) : (
+                                  <p className="text-xs text-foreground/40 mt-1">
+                                    {lessonCount} lesson{lessonCount !== 1 ? "s" : ""} · Not started
+                                  </p>
+                                )}
+                              </div>
+                            ) : (
+                              <p className="text-xs text-foreground/40 mt-1">
+                                {module.xpValue} XP
+                                {module.ceEligible && ` · ${module.ceValue} CE credits`}
+                              </p>
                             )}
                           </div>
-                          {module.description && (
-                            <p className="text-sm text-foreground/50 truncate">
-                              {module.description}
-                            </p>
-                          )}
-                          <p className="text-xs text-foreground/40 mt-1">
-                            {module.xpValue} XP
-                            {module.ceEligible && ` · ${module.ceValue} CE credits`}
-                          </p>
-                        </div>
 
-                        <div className="ml-4 flex-shrink-0">
-                          {href && isAccessible ? (
-                            <a
-                              href={href}
-                              className="text-sm font-medium text-accent hover:underline"
-                            >
-                              Start
-                            </a>
-                          ) : href && !isAccessible ? (
-                            <a
-                              href="/subscribe"
-                              className="text-sm font-medium text-foreground/40 hover:text-foreground/70 transition-colors"
-                            >
-                              Unlock
-                            </a>
-                          ) : (
-                            <span className="text-sm text-foreground/30">No lessons</span>
-                          )}
+                          {/* Action button */}
+                          <div className="ml-4 flex-shrink-0">
+                            {buttonHref && isAccessible ? (
+                              <a
+                                href={buttonHref}
+                                className={`text-sm font-medium min-h-[36px] flex items-center px-3 py-1.5 rounded-md transition-colors ${
+                                  isModuleCompleted
+                                    ? "text-green-700 bg-green-50 hover:bg-green-100"
+                                    : isModuleStarted
+                                    ? "text-white bg-accent hover:bg-accent-hover"
+                                    : "text-accent hover:underline"
+                                }`}
+                              >
+                                {buttonLabel}
+                              </a>
+                            ) : buttonHref && !isAccessible ? (
+                              <a
+                                href="/subscribe"
+                                className="text-sm font-medium text-foreground/40 hover:text-foreground/70 transition-colors"
+                              >
+                                Unlock
+                              </a>
+                            ) : (
+                              <span className="text-sm text-foreground/30">No lessons</span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     )

@@ -23,9 +23,20 @@ export default function UserMenu({ name, email, image, isAdmin }: Props) {
     return () => document.removeEventListener("mousedown", handleClick)
   }, [])
 
-  const label = name ?? email
-  const initials = name
-    ? name.split(" ").filter(Boolean).map((w) => w[0]).join("").toUpperCase().slice(0, 2)
+  function toTitleCase(str: string): string {
+    return str
+      .toLowerCase()
+      .split(" ")
+      .filter(Boolean)
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ")
+      .trim()
+  }
+
+  const displayName = name ? toTitleCase(name) : null
+  const label = displayName ?? email
+  const initials = displayName
+    ? displayName.split(" ").filter(Boolean).map((w) => w[0]).join("").toUpperCase().slice(0, 2)
     : email[0].toUpperCase()
 
   return (
@@ -61,7 +72,7 @@ export default function UserMenu({ name, email, image, isAdmin }: Props) {
       {open && (
         <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-lg border border-gray-100 shadow-lg z-50 overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
-            {name && <p className="text-sm font-medium text-foreground truncate">{name}</p>}
+            {displayName && <p className="text-sm font-medium text-foreground truncate">{displayName}</p>}
             <p className="text-xs text-foreground/60 truncate">{email}</p>
           </div>
           <div className="py-1">
