@@ -217,20 +217,21 @@ model Belt {
 }
 
 model Module {
-  id          String   @id @default(uuid())
-  trackId     String
-  beltId      String
-  moduleTitle String
-  description String?
-  isRequired  Boolean  @default(true)
-  xpValue     Int      @default(50)
-  ceEligible  Boolean  @default(false)
-  ceValue     Float    @default(0)
-  orderIndex  Int
-  isActive    Boolean  @default(true)
-  isFreePreview Boolean @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(uuid())
+  trackId       String
+  beltId        String
+  moduleTitle   String
+  description   String?
+  introVideoUrl String?
+  isRequired    Boolean  @default(true)
+  xpValue       Int      @default(50)
+  ceEligible    Boolean  @default(false)
+  ceValue       Float    @default(0)
+  orderIndex    Int
+  isActive      Boolean  @default(true)
+  isFreePreview Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   track     Track      @relation(fields: [trackId], references: [id])
   belt      Belt       @relation(fields: [beltId], references: [id])

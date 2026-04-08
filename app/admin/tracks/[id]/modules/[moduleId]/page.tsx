@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import DeleteButton from "@/app/components/DeleteButton"
+import EditModuleForm from "./EditModuleForm"
 
 export default async function ModuleEditPage({
   params,
@@ -49,6 +50,17 @@ export default async function ModuleEditPage({
           />
         </div>
       </div>
+
+      {/* Module settings (title, description, intro video) */}
+      <EditModuleForm
+        trackId={trackId}
+        moduleId={moduleId}
+        initial={{
+          moduleTitle: module.moduleTitle,
+          description: module.description ?? "",
+          introVideoUrl: module.introVideoUrl ?? "",
+        }}
+      />
 
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <div className="flex items-center justify-between mb-4">

@@ -2,6 +2,7 @@ import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
 import { getTrackProgressMap } from "@/lib/progress"
+import VideoPlayer from "@/app/components/VideoPlayer"
 
 export default async function TrackDetailPage({
   params,
@@ -351,6 +352,16 @@ export default async function TrackDetailPage({
                             )}
                           </div>
                         </div>
+
+                        {/* Module intro video — shown when accessible */}
+                        {isAccessible && module.introVideoUrl && (
+                          <div className="mt-4 pt-4 border-t border-gray-100">
+                            <p className="text-xs font-semibold text-[#F97316] uppercase tracking-wider mb-2">
+                              Module Introduction
+                            </p>
+                            <VideoPlayer url={module.introVideoUrl} title={`${module.moduleTitle} — Introduction`} />
+                          </div>
+                        )}
                       </div>
                     )
                   })}

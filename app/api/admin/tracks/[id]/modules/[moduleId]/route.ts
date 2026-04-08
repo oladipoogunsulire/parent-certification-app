@@ -10,6 +10,36 @@ async function adminGuard() {
   return user
 }
 
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string; moduleId: string }> }
+) {
+  const user = await adminGuard()
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+  const { moduleId } = await params
+  const { moduleTitle, description, introVideoUrl } = await req.json()
+
+  if (!moduleTitle?.trim()) {
+    return NextResponse.json({ error: "Module title is required." }, { status: 400 })
+  }
+
+  try {
+    const module = await prisma.module.update({
+      where: { id: moduleId },
+      data: {
+        moduleTitle: moduleTitle.trim(),
+        description: description?.trim() || null,
+        introVideoUrl: introVideoUrl?.trim() || null,
+      },
+    })
+    return NextResponse.json(module)
+  } catch (error) {
+    console.error("Update module error:", error)
+    return NextResponse.json({ error: "Failed to update module." }, { status: 500 })
+  }
+}
+
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string; moduleId: string }> }
