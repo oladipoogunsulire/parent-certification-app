@@ -35,6 +35,7 @@ export default async function EditScenarioPage({
       initial={{
         beltId: scenario.beltId,
         scenarioTitle: scenario.scenarioTitle ?? "",
+        videoUrl: scenario.videoUrl ?? "",
         narrativeText: scenario.narrativeText,
         complexityLevel: scenario.complexityLevel,
         xpValue: scenario.xpValue,

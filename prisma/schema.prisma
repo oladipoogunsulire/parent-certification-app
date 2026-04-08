@@ -247,6 +247,8 @@ model Lesson {
   lessonTitle              String
   contentBody              String
   reflectionPrompt         String?
+  introVideoUrl            String?
+  mainVideoUrl             String?
   estimatedDurationMinutes Int?
   xpValue                  Int      @default(20)
   versionNumber            String   @default("1.0")
@@ -283,6 +285,7 @@ model Scenario {
   moduleId          String
   beltId            String
   scenarioTitle     String?
+  videoUrl          String?
   narrativeText     String
   complexityLevel   Int      @default(1)
   xpValue           Int      @default(30)

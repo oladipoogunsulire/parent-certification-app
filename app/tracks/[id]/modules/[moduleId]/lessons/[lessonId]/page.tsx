@@ -2,6 +2,7 @@ import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { notFound, redirect } from "next/navigation"
 import LessonCompleteButton from "./LessonCompleteButton"
+import VideoPlayer from "@/app/components/VideoPlayer"
 
 export default async function LessonPage({
   params,
@@ -159,7 +160,23 @@ export default async function LessonPage({
           {lesson.lessonTitle}
         </h1>
 
-        {/* Lesson content */}
+        {/* Intro video */}
+        {lesson.introVideoUrl && (
+          <div className="mb-6">
+            <p className="text-xs font-semibold text-[#F97316] uppercase tracking-wider mb-2">Introduction</p>
+            <VideoPlayer url={lesson.introVideoUrl} title="Introduction" />
+          </div>
+        )}
+
+        {/* Main lesson video */}
+        {lesson.mainVideoUrl && (
+          <div className="mb-6">
+            <p className="text-xs font-semibold text-[#1E3A5F] uppercase tracking-wider mb-2">{lesson.lessonTitle}</p>
+            <VideoPlayer url={lesson.mainVideoUrl} title={lesson.lessonTitle} />
+          </div>
+        )}
+
+        {/* Lesson text content */}
         <div className="bg-white rounded-lg border border-gray-200 p-6 sm:p-8 mb-6 text-gray-700 leading-relaxed whitespace-pre-wrap">
           {lesson.contentBody}
         </div>

@@ -18,7 +18,7 @@ export async function PATCH(
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { lessonId } = await params
-  const { lessonTitle, contentBody, reflectionPrompt, estimatedDurationMinutes, xpValue } =
+  const { lessonTitle, contentBody, reflectionPrompt, introVideoUrl, mainVideoUrl, estimatedDurationMinutes, xpValue } =
     await req.json()
 
   if (!lessonTitle || !contentBody) {
@@ -28,7 +28,15 @@ export async function PATCH(
   try {
     const lesson = await prisma.lesson.update({
       where: { id: lessonId },
-      data: { lessonTitle, contentBody, reflectionPrompt, estimatedDurationMinutes, xpValue },
+      data: {
+        lessonTitle,
+        contentBody,
+        reflectionPrompt,
+        introVideoUrl: introVideoUrl || null,
+        mainVideoUrl: mainVideoUrl || null,
+        estimatedDurationMinutes,
+        xpValue,
+      },
     })
     return NextResponse.json(lesson)
   } catch (error) {

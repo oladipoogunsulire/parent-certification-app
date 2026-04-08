@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { getEmbedUrl } from "@/lib/video"
 
 interface Belt {
   id: string
@@ -23,6 +24,7 @@ interface Props {
   initial: {
     beltId: string
     scenarioTitle: string
+    videoUrl: string
     narrativeText: string
     complexityLevel: number
     xpValue: number
@@ -52,6 +54,7 @@ export default function EditScenarioForm({
   const [form, setForm] = useState({
     beltId: initial.beltId,
     scenarioTitle: initial.scenarioTitle,
+    videoUrl: initial.videoUrl,
     narrativeText: initial.narrativeText,
     complexityLevel: initial.complexityLevel,
     xpValue: initial.xpValue,
@@ -156,6 +159,32 @@ export default function EditScenarioForm({
                 </option>
               ))}
             </select>
+          </div>
+
+          {/* Scenario video URL */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Scenario video URL (optional)
+            </label>
+            <input
+              type="url"
+              value={form.videoUrl}
+              onChange={(e) => setForm({ ...form, videoUrl: e.target.value })}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Paste YouTube, Vimeo or Synthesia link"
+            />
+            <p className="text-xs text-gray-500 mt-1">Supports YouTube, Vimeo and Synthesia links</p>
+            {getEmbedUrl(form.videoUrl) && (
+              <div className="mt-2 relative w-full rounded overflow-hidden bg-black" style={{ paddingBottom: "56.25%" }}>
+                <iframe
+                  src={getEmbedUrl(form.videoUrl)!}
+                  className="absolute inset-0 w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  title="Scenario video preview"
+                />
+              </div>
+            )}
           </div>
 
           <div>

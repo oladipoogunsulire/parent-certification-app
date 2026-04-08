@@ -22,6 +22,8 @@ export default async function EditLessonPage({
       lessonId={lessonId}
       initial={{
         lessonTitle: lesson.lessonTitle,
+        introVideoUrl: lesson.introVideoUrl ?? "",
+        mainVideoUrl: lesson.mainVideoUrl ?? "",
         contentBody: lesson.contentBody,
         reflectionPrompt: lesson.reflectionPrompt ?? "",
         estimatedDurationMinutes: lesson.estimatedDurationMinutes ?? 10,

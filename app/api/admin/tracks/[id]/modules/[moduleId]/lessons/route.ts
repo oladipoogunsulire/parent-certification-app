@@ -14,7 +14,7 @@ export async function POST(
   const resolvedParams = await params
   const moduleId = resolvedParams.moduleId
 
-  const { lessonTitle, contentBody, reflectionPrompt, estimatedDurationMinutes, xpValue } = await req.json()
+  const { lessonTitle, contentBody, reflectionPrompt, introVideoUrl, mainVideoUrl, estimatedDurationMinutes, xpValue } = await req.json()
 
   if (!lessonTitle || !contentBody) {
     return NextResponse.json({ error: "Title and content are required." }, { status: 400 })
@@ -26,6 +26,8 @@ export async function POST(
       lessonTitle,
       contentBody,
       reflectionPrompt,
+      introVideoUrl: introVideoUrl || null,
+      mainVideoUrl: mainVideoUrl || null,
       estimatedDurationMinutes,
       xpValue,
     },

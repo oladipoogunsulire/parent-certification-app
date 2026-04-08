@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter, useParams } from "next/navigation"
+import { getEmbedUrl } from "@/lib/video"
 
 export default function NewLessonPage() {
   const router = useRouter()
@@ -13,6 +14,8 @@ export default function NewLessonPage() {
   const [error, setError] = useState("")
   const [form, setForm] = useState({
     lessonTitle: "",
+    introVideoUrl: "",
+    mainVideoUrl: "",
     contentBody: "",
     reflectionPrompt: "",
     estimatedDurationMinutes: 10,
@@ -72,6 +75,58 @@ export default function NewLessonPage() {
             placeholder="e.g. What Are Boundaries and Why Do They Matter?"
             required
           />
+        </div>
+
+        {/* Intro video URL */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Intro video URL (optional)
+          </label>
+          <input
+            type="url"
+            value={form.introVideoUrl}
+            onChange={(e) => setForm({ ...form, introVideoUrl: e.target.value })}
+            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Paste YouTube, Vimeo or Synthesia link"
+          />
+          <p className="text-xs text-gray-500 mt-1">Supports YouTube, Vimeo and Synthesia links</p>
+          {getEmbedUrl(form.introVideoUrl) && (
+            <div className="mt-2 relative w-full rounded overflow-hidden bg-black" style={{ paddingBottom: "56.25%" }}>
+              <iframe
+                src={getEmbedUrl(form.introVideoUrl)!}
+                className="absolute inset-0 w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                title="Intro video preview"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Main video URL */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Main lesson video URL (optional)
+          </label>
+          <input
+            type="url"
+            value={form.mainVideoUrl}
+            onChange={(e) => setForm({ ...form, mainVideoUrl: e.target.value })}
+            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Paste YouTube, Vimeo or Synthesia link"
+          />
+          <p className="text-xs text-gray-500 mt-1">Supports YouTube, Vimeo and Synthesia links</p>
+          {getEmbedUrl(form.mainVideoUrl) && (
+            <div className="mt-2 relative w-full rounded overflow-hidden bg-black" style={{ paddingBottom: "56.25%" }}>
+              <iframe
+                src={getEmbedUrl(form.mainVideoUrl)!}
+                className="absolute inset-0 w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                title="Main video preview"
+              />
+            </div>
+          )}
         </div>
 
         <div>
