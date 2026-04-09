@@ -8,6 +8,7 @@ function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const urlError = searchParams.get("error")
+  const urlMessage = searchParams.get("message")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
@@ -37,6 +38,12 @@ function LoginForm() {
       <div className="max-w-md w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6 sm:p-8">
         <h1 className="text-2xl font-bold text-primary mb-2">Welcome back</h1>
         <p className="text-foreground/60 mb-8">Sign in to your account</p>
+
+        {urlMessage === "password-reset" && (
+          <div className="bg-green-50 text-green-800 p-3 rounded mb-4 text-sm">
+            Password reset successfully. Please sign in with your new password.
+          </div>
+        )}
 
         {urlError === "UseEmailPassword" && (
           <div className="bg-amber-50 text-amber-800 p-3 rounded mb-4 text-sm">
@@ -87,6 +94,12 @@ function LoginForm() {
             {loading ? "Signing in..." : "Sign in"}
           </button>
         </form>
+
+        <div className="mt-3 text-center">
+          <a href="/forgot-password" className="text-xs text-foreground/50 hover:text-foreground/70 hover:underline transition-colors">
+            Forgot password?
+          </a>
+        </div>
 
         <div className="mt-4">
           <div className="relative">

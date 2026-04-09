@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { signIn } from "next-auth/react"
+import { SECURITY_QUESTIONS } from "@/lib/security-questions"
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -10,6 +11,10 @@ export default function RegisterPage() {
   const [lastName, setLastName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [question1, setQuestion1] = useState(SECURITY_QUESTIONS[0])
+  const [answer1, setAnswer1] = useState("")
+  const [question2, setQuestion2] = useState(SECURITY_QUESTIONS[1])
+  const [answer2, setAnswer2] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
@@ -18,11 +23,17 @@ export default function RegisterPage() {
     setLoading(true)
     setError("")
 
+    if (question1 === question2) {
+      setError("Please select two different security questions.")
+      setLoading(false)
+      return
+    }
+
     try {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ firstName, lastName, email, password }),
+        body: JSON.stringify({ firstName, lastName, email, password, question1, answer1, question2, answer2 }),
       })
 
       const data = await res.json()
@@ -114,6 +125,76 @@ export default function RegisterPage() {
               minLength={8}
               required
             />
+          </div>
+
+          {/* Security Questions */}
+          <div className="pt-2">
+            <h2 className="text-base font-semibold text-primary mb-1">Security Questions</h2>
+            <p className="text-xs text-foreground/60 mb-4">
+              These will be used to verify your identity if you forget your password
+            </p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">
+                  Question 1
+                </label>
+                <select
+                  value={question1}
+                  onChange={(e) => setQuestion1(e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary bg-white"
+                  required
+                >
+                  {SECURITY_QUESTIONS.map((q) => (
+                    <option key={q} value={q}>{q}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">
+                  Answer 1
+                </label>
+                <input
+                  type="text"
+                  value={answer1}
+                  onChange={(e) => setAnswer1(e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                  placeholder="Your answer"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">
+                  Question 2
+                </label>
+                <select
+                  value={question2}
+                  onChange={(e) => setQuestion2(e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary bg-white"
+                  required
+                >
+                  {SECURITY_QUESTIONS.map((q) => (
+                    <option key={q} value={q}>{q}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">
+                  Answer 2
+                </label>
+                <input
+                  type="text"
+                  value={answer2}
+                  onChange={(e) => setAnswer2(e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                  placeholder="Your answer"
+                  required
+                />
+              </div>
+            </div>
           </div>
 
           <button

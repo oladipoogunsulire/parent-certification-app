@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
+import { hashAnswer } from "@/lib/security-questions"
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { firstName, lastName, password } = body
+    const { firstName, lastName, password, question1, answer1, question2, answer2 } = body
     const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : ""
 
     if (!email || !password || !firstName) {
@@ -44,6 +45,22 @@ export async function POST(req: NextRequest) {
         passwordHash,
       },
     })
+
+    // Create security questions if all fields are provided
+    if (question1 && answer1 && question2 && answer2) {
+      const answer1Hash = await hashAnswer(answer1)
+      const answer2Hash = await hashAnswer(answer2)
+
+      await prisma.userSecurityQuestion.create({
+        data: {
+          userId: user.id,
+          question1,
+          answer1Hash,
+          question2,
+          answer2Hash,
+        },
+      })
+    }
 
     return NextResponse.json(
       { message: "Account created successfully.", userId: user.id },

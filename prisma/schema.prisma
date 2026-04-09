@@ -43,6 +43,8 @@ model User {
   notificationPrefs    NotificationPreference?
   inAppNotifications   InAppNotification[]
   lessonProgress       UserLessonProgress[]
+  securityQuestion     UserSecurityQuestion?
+  resetTokens          PasswordResetToken[]
 
   @@map("users")
 }
@@ -569,4 +571,32 @@ model InAppNotification {
   user User @relation(fields: [userId], references: [id])
 
   @@map("in_app_notifications")
+}
+
+model UserSecurityQuestion {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  question1   String
+  answer1Hash String
+  question2   String
+  answer2Hash String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_security_questions")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_reset_tokens")
 }
