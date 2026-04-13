@@ -2,6 +2,7 @@ import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import AppHeader from "@/app/components/AppHeader"
+import SecurityQuestionsBanner from "@/app/components/SecurityQuestionsBanner"
 import { getRecentActivity } from "@/lib/progress"
 
 export default async function DashboardPage() {
@@ -86,6 +87,9 @@ export default async function DashboardPage() {
             Continue your influence journey.
           </p>
         </div>
+
+        {/* Security questions banner — shown to users who haven't set them up */}
+        <SecurityQuestionsBanner />
 
         {/* Subscription nudge */}
         {!hasActiveSubscription && (

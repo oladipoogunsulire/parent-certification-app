@@ -27,6 +27,9 @@ export default async function ProfilePage() {
         take: 1,
         select: { id: true },
       },
+      securityQuestion: {
+        select: { id: true },
+      },
     },
   })
 
@@ -79,6 +82,7 @@ export default async function ProfilePage() {
           beltsEarned: user.certifications.length,
           modulesCompleted: user.ceRecords.length,
         }}
+        hasSecurityQuestions={!!user.securityQuestion}
       />
     </>
   )

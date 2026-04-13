@@ -16,9 +16,10 @@ interface Props {
     beltsEarned: number
     modulesCompleted: number
   }
+  hasSecurityQuestions: boolean
 }
 
-export default function ProfileForm({ user, stats }: Props) {
+export default function ProfileForm({ user, stats, hasSecurityQuestions }: Props) {
   const [firstName, setFirstName] = useState(user.firstName)
   const [lastName, setLastName]   = useState(user.lastName)
   const [loading, setLoading]     = useState(false)
@@ -182,6 +183,74 @@ export default function ProfileForm({ user, stats }: Props) {
               </button>
             </div>
           </form>
+        </div>
+
+        {/* ── Account Security ─────────────────────────────────────────── */}
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+          <h2 className="text-lg font-bold text-primary mb-5">Account Security</h2>
+
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              {hasSecurityQuestions ? (
+                <>
+                  {/* Green shield */}
+                  <svg
+                    className="w-5 h-5 text-green-600 flex-shrink-0"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <div>
+                    <p className="text-sm font-medium text-green-700">
+                      Security questions set ✓
+                    </p>
+                    <p className="text-xs text-foreground/50 mt-0.5">
+                      Your account is protected for password recovery
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Amber shield */}
+                  <svg
+                    className="w-5 h-5 text-amber-600 flex-shrink-0"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zM11 14a1 1 0 11-2 0 1 1 0 012 0zm0-7a1 1 0 10-2 0v3a1 1 0 102 0V7z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <div>
+                    <p className="text-sm font-medium text-amber-700">
+                      Security questions not set
+                    </p>
+                    <p className="text-xs text-foreground/50 mt-0.5">
+                      Add security questions to enable password recovery
+                    </p>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <a
+              href="/profile/security-questions"
+              className="flex-shrink-0 text-sm font-medium text-accent hover:underline transition-colors"
+            >
+              {hasSecurityQuestions
+                ? "Update security questions"
+                : "Set up security questions"}
+            </a>
+          </div>
         </div>
 
         {/* ── Influence Journey ────────────────────────────────────────── */}
