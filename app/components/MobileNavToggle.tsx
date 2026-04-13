@@ -32,7 +32,7 @@ export default function MobileNavToggle({ isLoggedIn, isAdmin }: Props) {
       {open && (
         <div className="md:hidden absolute top-full left-0 w-full bg-white border-t border-gray-100 shadow-lg px-4 py-4 space-y-1 z-50">
           <a
-            href="/tracks"
+            href="/modules"
             onClick={() => setOpen(false)}
             className="flex items-center min-h-[44px] px-3 rounded-lg text-foreground/70 hover:text-foreground hover:bg-gray-50 text-sm font-medium transition-colors"
           >

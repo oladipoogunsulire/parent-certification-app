@@ -113,7 +113,10 @@ export default async function ModuleEditPage({
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="font-semibold text-gray-900">Scenarios</h3>
-            <p className="text-xs text-gray-500 mt-0.5">{module.scenarios.length} scenario{module.scenarios.length !== 1 ? "s" : ""}</p>
+            <p className="text-xs text-gray-500 mt-0.5">
+              {module.scenarios.length} scenario{module.scenarios.length !== 1 ? "s" : ""} ·{" "}
+              Scenarios are shown to users after all lessons in this module are completed
+            </p>
           </div>
           <Link
             href={`/admin/tracks/${trackId}/modules/${moduleId}/scenarios/new`}

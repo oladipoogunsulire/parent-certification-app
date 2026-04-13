@@ -1,25 +1,17 @@
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
-import { notFound, redirect } from "next/navigation"
+import AppHeader from "@/app/components/AppHeader"
 import { getTrackProgressMap } from "@/lib/progress"
 import VideoPlayer from "@/app/components/VideoPlayer"
-import { MULTI_TRACK_ENABLED, EXAMS_ENABLED } from "@/lib/feature-flags"
+import { EXAMS_ENABLED } from "@/lib/feature-flags"
 
-export default async function TrackDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
-  const { id } = await params
-
-  if (!MULTI_TRACK_ENABLED) {
-    redirect("/modules")
-  }
-
+export default async function ModulesPage() {
   const session = await auth()
 
-  const track = await prisma.track.findUnique({
-    where: { id, isActive: true },
+  // Fetch the first active track with all belts + modules
+  const track = await prisma.track.findFirst({
+    where: { isActive: true },
+    orderBy: { createdAt: "asc" },
     include: {
       belts: {
         orderBy: { orderIndex: "asc" },
@@ -40,7 +32,22 @@ export default async function TrackDetailPage({
     },
   })
 
-  if (!track) notFound()
+  // No active track — show coming soon
+  if (!track) {
+    return (
+      <div className="min-h-screen bg-background">
+        <AppHeader />
+        <main className="max-w-4xl mx-auto px-4 py-8">
+          <div className="bg-white rounded-lg border border-gray-100 shadow-sm p-12 text-center">
+            <p className="text-foreground/50 text-lg">Modules coming soon.</p>
+            <p className="text-foreground/40 text-sm mt-2">
+              Check back shortly — content is on its way.
+            </p>
+          </div>
+        </main>
+      </div>
+    )
+  }
 
   let hasActiveSubscription = false
   if (session?.user?.id) {
@@ -50,15 +57,13 @@ export default async function TrackDetailPage({
     hasActiveSubscription = !!sub
   }
 
-  // Fetch per-module progress (empty map for guests)
   const progressMap = session?.user?.id
-    ? await getTrackProgressMap(session.user.id, id)
+    ? await getTrackProgressMap(session.user.id, track.id)
     : new Map()
 
-  // Determine the globally first module (for free preview)
   const firstModule = track.belts[0]?.modules[0]
 
-  // Compute overall track progress for the top-of-page banner
+  // Overall progress banner data
   const allModules = track.belts.flatMap((b) => b.modules)
   const totalLessons = allModules.reduce(
     (acc, m) => acc + (progressMap.get(m.id)?.total ?? m.lessons.length),
@@ -70,19 +75,19 @@ export default async function TrackDetailPage({
   )
   const overallPct =
     totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0
-  const trackStarted = session?.user?.id
+  const isStarted = session?.user?.id
     ? allModules.some((m) => progressMap.get(m.id)?.isStarted)
     : false
-  const trackCompleted = totalLessons > 0 && completedLessons === totalLessons
+  const isAllCompleted = totalLessons > 0 && completedLessons === totalLessons
 
-  // Find most-recently visited lesson for the "Resume" button at track level
+  // Find most recently visited lesson for the Resume button
   let resumeLessonId: string | null = null
   let resumeModuleId: string | null = null
-  if (session?.user?.id && trackStarted) {
+  if (session?.user?.id && isStarted) {
     const recentProgress = await prisma.userLessonProgress.findFirst({
       where: {
         userId: session.user.id,
-        lesson: { module: { trackId: id } },
+        lesson: { module: { trackId: track.id } },
       },
       orderBy: { lastVisitedAt: "desc" },
       select: { lessonId: true, lesson: { select: { moduleId: true } } },
@@ -93,57 +98,22 @@ export default async function TrackDetailPage({
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="bg-white border-b border-gray-100 shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <a href="/" className="text-xl font-bold text-primary">
-            The Ultimate Influencer™
-          </a>
-          <div className="flex items-center gap-4">
-            <a href="/tracks" className="text-sm text-foreground/70 hover:text-foreground transition-colors">
-              All Modules
-            </a>
-            {session?.user ? (
-              <a href="/dashboard" className="text-sm text-foreground/70 hover:text-foreground transition-colors">
-                Dashboard
-              </a>
-            ) : (
-              <a href="/login" className="text-sm font-medium text-accent hover:underline">
-                Sign in
-              </a>
-            )}
-          </div>
-        </div>
-      </header>
+      <AppHeader />
 
       <main className="max-w-4xl mx-auto px-4 py-8">
-        {/* Breadcrumb + title */}
         <div className="mb-8">
-          <div className="flex items-center gap-2 text-sm text-foreground/50 mb-3 min-w-0">
-            <a href="/tracks" className="hover:text-foreground transition-colors">
-              Modules
-            </a>
-            <span>/</span>
-            <span className="text-foreground truncate">{track.trackName}</span>
-          </div>
-          {track.ageBand && (
-            <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-1 rounded-full">
-              {track.ageBand}
-            </span>
-          )}
-          <h2 className="text-3xl font-bold text-primary mt-3">{track.trackName}</h2>
-          {track.description && (
-            <p className="text-foreground/60 mt-2">{track.description}</p>
-          )}
+          <h2 className="text-2xl font-bold text-primary">Modules</h2>
+          <p className="text-foreground/60 mt-1">Your influence learning path.</p>
         </div>
 
-        {/* ── Overall progress banner (logged-in + started) ── */}
-        {session?.user && trackStarted && (
+        {/* Overall progress banner */}
+        {session?.user && isStarted && (
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 mb-8">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-sm font-medium text-foreground">
-                    {trackCompleted ? "Module complete!" : "Your progress"}
+                    {isAllCompleted ? "Programme complete!" : "Your progress"}
                   </span>
                   <span className="text-sm font-semibold text-accent">
                     {completedLessons} / {totalLessons} lessons ({overallPct}%)
@@ -158,10 +128,10 @@ export default async function TrackDetailPage({
               </div>
               {resumeLessonId && resumeModuleId && (
                 <a
-                  href={`/tracks/${id}/modules/${resumeModuleId}/lessons/${resumeLessonId}`}
+                  href={`/modules/${resumeModuleId}/lessons/${resumeLessonId}`}
                   className="flex-shrink-0 min-h-[44px] flex items-center bg-accent text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-accent-hover transition-colors"
                 >
-                  {trackCompleted ? "Review Module" : "Resume"}
+                  {isAllCompleted ? "Review" : "Resume"}
                 </a>
               )}
             </div>
@@ -176,7 +146,8 @@ export default async function TrackDetailPage({
                 First module is free to preview.
               </p>
               <p className="text-sm text-amber-700 mt-0.5">
-                Subscribe to unlock all modules and belt exams.
+                Subscribe to unlock all modules
+                {EXAMS_ENABLED ? " and belt exams" : ""}.
               </p>
             </div>
             <a
@@ -210,7 +181,7 @@ export default async function TrackDetailPage({
                 </div>
                 {EXAMS_ENABLED && hasActiveSubscription && (
                   <a
-                    href={`/tracks/${id}/belts/${belt.id}/exam`}
+                    href={`/tracks/${track.id}/belts/${belt.id}/exam`}
                     className="flex-shrink-0 text-sm font-medium bg-primary text-white px-4 py-1.5 rounded-md hover:bg-primary-hover transition-colors min-h-[44px] flex items-center"
                   >
                     Take exam
@@ -230,7 +201,7 @@ export default async function TrackDetailPage({
                       firstModule?.id === module.id
                     const isFree = module.isFreePreview || isFirstModuleInTrack
                     const isAccessible = isFree || hasActiveSubscription
-                    const firstLessonId = module.lessons[0]?.id ?? null
+                    const hasLessons = module.lessons.length > 0
 
                     const prog = progressMap.get(module.id)
                     const lessonCount = module.lessons.length
@@ -240,16 +211,21 @@ export default async function TrackDetailPage({
                     const isModuleStarted = prog?.isStarted ?? false
                     const lastLessonId = prog?.lastVisitedLessonId ?? null
 
-                    // Determine button label + href
+                    // Button label + href
                     let buttonLabel = "Start"
-                    let buttonHref = firstLessonId
-                      ? `/tracks/${id}/modules/${module.id}/lessons/${firstLessonId}`
+                    let buttonHref: string | null = hasLessons
+                      ? `/modules/${module.id}`
                       : null
-                    if (session?.user && isModuleCompleted) {
+                    if (buttonHref && session?.user && isModuleCompleted) {
                       buttonLabel = "Review"
-                    } else if (session?.user && isModuleStarted && lastLessonId) {
+                    } else if (
+                      buttonHref &&
+                      session?.user &&
+                      isModuleStarted &&
+                      lastLessonId
+                    ) {
                       buttonLabel = "Resume"
-                      buttonHref = `/tracks/${id}/modules/${module.id}/lessons/${lastLessonId}`
+                      buttonHref = `/modules/${module.id}/lessons/${lastLessonId}`
                     }
 
                     return (
@@ -306,9 +282,12 @@ export default async function TrackDetailPage({
                                   <>
                                     <div className="flex items-center justify-between mb-1">
                                       <span className="text-xs text-foreground/50">
-                                        {completedCount} of {lessonCount} lesson{lessonCount !== 1 ? "s" : ""} completed
+                                        {completedCount} of {lessonCount} lesson
+                                        {lessonCount !== 1 ? "s" : ""} completed
                                       </span>
-                                      <span className="text-xs font-medium text-accent">{pct}%</span>
+                                      <span className="text-xs font-medium text-accent">
+                                        {pct}%
+                                      </span>
                                     </div>
                                     <div className="w-full bg-gray-100 rounded-full h-1.5">
                                       <div
@@ -319,14 +298,16 @@ export default async function TrackDetailPage({
                                   </>
                                 ) : (
                                   <p className="text-xs text-foreground/40 mt-1">
-                                    {lessonCount} lesson{lessonCount !== 1 ? "s" : ""} · Not started
+                                    {lessonCount} lesson
+                                    {lessonCount !== 1 ? "s" : ""} · Not started
                                   </p>
                                 )}
                               </div>
                             ) : (
                               <p className="text-xs text-foreground/40 mt-1">
                                 {module.xpValue} XP
-                                {module.ceEligible && ` · ${module.ceValue} CE credits`}
+                                {module.ceEligible &&
+                                  ` · ${module.ceValue} CE credits`}
                               </p>
                             )}
                           </div>
@@ -354,7 +335,9 @@ export default async function TrackDetailPage({
                                 Unlock
                               </a>
                             ) : (
-                              <span className="text-sm text-foreground/30">No lessons</span>
+                              <span className="text-sm text-foreground/30">
+                                No lessons
+                              </span>
                             )}
                           </div>
                         </div>
@@ -365,7 +348,10 @@ export default async function TrackDetailPage({
                             <p className="text-xs font-semibold text-[#F97316] uppercase tracking-wider mb-2">
                               Module Introduction
                             </p>
-                            <VideoPlayer url={module.introVideoUrl} title={`${module.moduleTitle} — Introduction`} />
+                            <VideoPlayer
+                              url={module.introVideoUrl}
+                              title={`${module.moduleTitle} — Introduction`}
+                            />
                           </div>
                         )}
                       </div>

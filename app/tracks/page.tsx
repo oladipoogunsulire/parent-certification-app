@@ -2,8 +2,14 @@ import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import Link from "next/link"
 import AppHeader from "@/app/components/AppHeader"
+import { redirect } from "next/navigation"
+import { MULTI_TRACK_ENABLED } from "@/lib/feature-flags"
 
 export default async function TracksPage() {
+  if (!MULTI_TRACK_ENABLED) {
+    redirect("/modules")
+  }
+
   const session = await auth()
   const userId = session?.user?.id ?? null
 

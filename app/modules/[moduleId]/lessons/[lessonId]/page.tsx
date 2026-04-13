@@ -3,19 +3,13 @@ import { prisma } from "@/lib/prisma"
 import { notFound, redirect } from "next/navigation"
 import LessonCompleteButton from "./LessonCompleteButton"
 import VideoPlayer from "@/app/components/VideoPlayer"
-import { MULTI_TRACK_ENABLED } from "@/lib/feature-flags"
 
 export default async function LessonPage({
   params,
 }: {
-  params: Promise<{ id: string; moduleId: string; lessonId: string }>
+  params: Promise<{ moduleId: string; lessonId: string }>
 }) {
-  const { id, moduleId, lessonId } = await params
-
-  if (!MULTI_TRACK_ENABLED) {
-    redirect(`/modules/${moduleId}/lessons/${lessonId}`)
-  }
-
+  const { moduleId, lessonId } = await params
   const session = await auth()
 
   if (!session?.user) {
@@ -38,18 +32,14 @@ export default async function LessonPage({
     },
   })
 
-  // Validate the lesson belongs to the correct module and track
-  if (
-    !lesson ||
-    lesson.module.id !== moduleId ||
-    lesson.module.trackId !== id
-  ) {
+  // Validate lesson belongs to the correct module
+  if (!lesson || lesson.module.id !== moduleId) {
     notFound()
   }
 
   // Paywall: check if this module is freely accessible
   const firstModule = await prisma.module.findFirst({
-    where: { trackId: id, isActive: true },
+    where: { trackId: lesson.module.trackId, isActive: true },
     orderBy: { orderIndex: "asc" },
   })
 
@@ -65,7 +55,7 @@ export default async function LessonPage({
     }
   }
 
-  // Record visit and retrieve completed state in one upsert
+  // Record visit and retrieve completed state
   let alreadyCompleted = false
   try {
     const progress = await prisma.userLessonProgress.upsert({
@@ -90,10 +80,10 @@ export default async function LessonPage({
   const prevLesson = currentIndex > 0 ? lessonList[currentIndex - 1] : null
   const nextLesson =
     currentIndex < lessonList.length - 1 ? lessonList[currentIndex + 1] : null
-  const lessonBase = `/tracks/${id}/modules/${moduleId}/lessons`
-  const moduleHref = `/tracks/${id}`
+  const lessonBase = `/modules/${moduleId}/lessons`
+  const moduleHref = `/modules/${moduleId}`
 
-  // Progress counters for the breadcrumb area
+  // Progress counters
   const completedInModule = await prisma.userLessonProgress.count({
     where: {
       userId: session.user.id,
@@ -169,7 +159,9 @@ export default async function LessonPage({
         {/* Intro video */}
         {lesson.introVideoUrl && (
           <div className="mb-6">
-            <p className="text-xs font-semibold text-[#F97316] uppercase tracking-wider mb-2">Introduction</p>
+            <p className="text-xs font-semibold text-[#F97316] uppercase tracking-wider mb-2">
+              Introduction
+            </p>
             <VideoPlayer url={lesson.introVideoUrl} title="Introduction" />
           </div>
         )}
@@ -177,7 +169,9 @@ export default async function LessonPage({
         {/* Main lesson video */}
         {lesson.mainVideoUrl && (
           <div className="mb-6">
-            <p className="text-xs font-semibold text-[#1E3A5F] uppercase tracking-wider mb-2">{lesson.lessonTitle}</p>
+            <p className="text-xs font-semibold text-[#1E3A5F] uppercase tracking-wider mb-2">
+              {lesson.lessonTitle}
+            </p>
             <VideoPlayer url={lesson.mainVideoUrl} title={lesson.lessonTitle} />
           </div>
         )}
@@ -199,7 +193,6 @@ export default async function LessonPage({
 
         {/* Completion + navigation row */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-6 border-t border-gray-200">
-          {/* Mark as Complete button */}
           <LessonCompleteButton
             lessonId={lessonId}
             nextLessonHref={nextLesson ? `${lessonBase}/${nextLesson.id}` : null}
@@ -207,7 +200,6 @@ export default async function LessonPage({
             initialCompleted={alreadyCompleted}
           />
 
-          {/* Prev / Next links */}
           <div className="flex items-center gap-4 ml-auto">
             {prevLesson && (
               <a

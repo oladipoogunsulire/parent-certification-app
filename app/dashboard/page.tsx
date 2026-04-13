@@ -141,7 +141,7 @@ export default async function DashboardPage() {
                 </div>
               </div>
               <a
-                href={`/tracks/${recentActivity.trackId}/modules/${recentActivity.moduleId}/lessons/${recentActivity.lastLessonId}`}
+                href={`/modules/${recentActivity.moduleId}/lessons/${recentActivity.lastLessonId}`}
                 className="flex-shrink-0 min-h-[44px] flex items-center bg-accent text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-accent-hover transition-colors"
               >
                 {recentActivity.isCompleted ? "Review Module" : "Resume"}
@@ -156,7 +156,7 @@ export default async function DashboardPage() {
               Your journey starts here — browse a module to begin
             </p>
             <a
-              href="/tracks"
+              href="/modules"
               className="inline-block bg-primary text-white px-5 py-2 rounded-md text-sm font-medium hover:bg-primary-hover transition-colors"
             >
               Browse Modules
