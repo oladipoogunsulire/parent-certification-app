@@ -40,6 +40,7 @@ export default async function EditScenarioPage({
         complexityLevel: scenario.complexityLevel,
         xpValue: scenario.xpValue,
         isRequired: scenario.isRequired,
+        isActive: scenario.isActive,
         responses: scenario.responses.map((r) => ({
           responseText: r.responseText,
           isOptimal: r.isOptimal,

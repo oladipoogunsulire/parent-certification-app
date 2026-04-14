@@ -16,10 +16,24 @@ interface ResponseField {
   explanationText: string
 }
 
+const SCORE_OPTIONS = [
+  { value: 10, label: "10 — Best response (Most influential)" },
+  { value: 7,  label: "7 — Good response (Positively influential)" },
+  { value: 5,  label: "5 — Neutral response (Minimally influential)" },
+  { value: 3,  label: "3 — Weak response (Least influential)" },
+]
+
+const SCORING_GUIDE = [
+  { score: 10, label: "Best response",    description: "The most influential parenting choice — assign to one response only" },
+  { score: 7,  label: "Good response",    description: "A positive choice with meaningful influence" },
+  { score: 5,  label: "Neutral response", description: "Minimally influential — neither harmful nor helpful" },
+  { score: 3,  label: "Weak response",    description: "The least influential choice — assign to the weakest response" },
+]
+
 const emptyResponse = (): ResponseField => ({
   responseText: "",
   isOptimal: false,
-  scoreImpact: 0,
+  scoreImpact: 3,
   explanationText: "",
 })
 
@@ -35,6 +49,8 @@ export default function NewScenarioForm({
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [validationErrors, setValidationErrors] = useState<string[]>([])
+  const [guideOpen, setGuideOpen] = useState(false)
 
   const [form, setForm] = useState({
     beltId: belts[0]?.id ?? "",
@@ -44,11 +60,10 @@ export default function NewScenarioForm({
     complexityLevel: 1,
     xpValue: 30,
     isRequired: true,
+    isActive: true,
   })
 
   const [responses, setResponses] = useState<ResponseField[]>([
-    emptyResponse(),
-    emptyResponse(),
     emptyResponse(),
     emptyResponse(),
   ])
@@ -59,10 +74,41 @@ export default function NewScenarioForm({
     )
   }
 
+  const addResponse = () => {
+    if (responses.length < 6) {
+      setResponses((prev) => [...prev, emptyResponse()])
+    }
+  }
+
+  const removeResponse = (index: number) => {
+    if (responses.length > 2) {
+      setResponses((prev) => prev.filter((_, i) => i !== index))
+    }
+  }
+
+  const validate = (): string[] => {
+    const errors: string[] = []
+    const filled = responses.filter((r) => r.responseText.trim() !== "")
+    if (filled.length < 2) {
+      errors.push("At least 2 responses must be filled in.")
+    }
+    const optimalCount = filled.filter((r) => r.isOptimal).length
+    if (optimalCount !== 1) {
+      errors.push("Exactly one response must be marked as the optimal response.")
+    }
+    return errors
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
     setError("")
+    const errors = validate()
+    if (errors.length > 0) {
+      setValidationErrors(errors)
+      return
+    }
+    setValidationErrors([])
+    setLoading(true)
 
     try {
       const res = await fetch(
@@ -142,7 +188,6 @@ export default function NewScenarioForm({
             </select>
           </div>
 
-          {/* Scenario video URL */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Scenario video URL (optional)
@@ -231,16 +276,88 @@ export default function NewScenarioForm({
         {/* Response options */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <h3 className="font-semibold text-gray-900 mb-4">Response options</h3>
+
+          {/* Influence Score™ Scoring Guide */}
+          <div className="mb-5 rounded-lg border border-[#1E3A5F]/20 overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setGuideOpen((o) => !o)}
+              className="w-full flex items-center justify-between px-4 py-3 bg-[#1E3A5F] text-white text-sm font-semibold hover:bg-[#162d4a] transition-colors"
+            >
+              <span>Influence Score™ Scoring Guide</span>
+              <svg
+                className={`w-4 h-4 transition-transform ${guideOpen ? "rotate-180" : ""}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {guideOpen && (
+              <div className="border-t border-[#1E3A5F]/20">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-[#1E3A5F]/5">
+                      <th className="text-left px-4 py-2 font-semibold text-[#1E3A5F] w-12">Score</th>
+                      <th className="text-left px-4 py-2 font-semibold text-[#1E3A5F] w-36">Label</th>
+                      <th className="text-left px-4 py-2 font-semibold text-[#1E3A5F]">Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {SCORING_GUIDE.map((row) => (
+                      <tr key={row.score} className="border-t border-gray-100">
+                        <td className="px-4 py-2 font-bold text-[#F97316]">{row.score}</td>
+                        <td className="px-4 py-2 font-medium text-gray-900">{row.label}</td>
+                        <td className="px-4 py-2 text-gray-600">{row.description}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          {/* Validation errors */}
+          {validationErrors.length > 0 && (
+            <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3 space-y-1">
+              {validationErrors.map((err, i) => (
+                <p key={i} className="text-sm text-red-700">{err}</p>
+              ))}
+            </div>
+          )}
+
           <p className="text-xs text-gray-500 mb-4">
-            Add up to 4 response options. Blank responses will be skipped.
+            Add 2–6 response options. Blank responses will be skipped. Exactly one must be marked optimal.
           </p>
 
-          <div className="space-y-6">
+          <div className="space-y-4">
             {responses.map((response, index) => (
-              <div key={index} className="border border-gray-200 rounded-lg p-4">
-                <p className="text-sm font-medium text-gray-700 mb-3">
-                  Response {index + 1}
-                </p>
+              <div
+                key={index}
+                className="border border-gray-200 rounded-lg p-4"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium text-gray-700">
+                      Response {index + 1}
+                    </p>
+                    {response.scoreImpact === 10 && response.responseText.trim() !== "" && (
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-700">
+                        Best response
+                      </span>
+                    )}
+                  </div>
+                  {responses.length > 2 && (
+                    <button
+                      type="button"
+                      onClick={() => removeResponse(index)}
+                      className="text-xs text-red-500 hover:text-red-700 hover:underline"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
 
                 <div className="space-y-3">
                   <div>
@@ -258,25 +375,29 @@ export default function NewScenarioForm({
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-medium text-gray-600 mb-1">
-                        Score impact
+                        Influence Score™
                       </label>
-                      <input
-                        type="number"
+                      <select
                         value={response.scoreImpact}
                         onChange={(e) =>
                           updateResponse(index, "scoreImpact", parseFloat(e.target.value))
                         }
                         className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        step={0.1}
-                      />
+                      >
+                        {SCORE_OPTIONS.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
                     </div>
-                    <div className="flex items-end pb-2">
+                    <div className="flex items-end pb-1">
                       <div className="flex items-center gap-2">
                         <input
-                          id={`optimal-${index}`}
+                          id={`optimal-new-${index}`}
                           type="checkbox"
                           checked={response.isOptimal}
                           onChange={(e) =>
@@ -285,7 +406,7 @@ export default function NewScenarioForm({
                           className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                         />
                         <label
-                          htmlFor={`optimal-${index}`}
+                          htmlFor={`optimal-new-${index}`}
                           className="text-sm font-medium text-gray-700"
                         >
                           Optimal response
@@ -311,6 +432,44 @@ export default function NewScenarioForm({
                 </div>
               </div>
             ))}
+          </div>
+
+          {responses.length < 6 && (
+            <button
+              type="button"
+              onClick={addResponse}
+              className="mt-4 flex items-center gap-1.5 text-sm text-[#1E3A5F] font-medium hover:underline"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Add response
+            </button>
+          )}
+        </div>
+
+        {/* Active toggle */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h3 className="font-semibold text-gray-900 mb-3">Visibility</h3>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              role="switch"
+              aria-checked={form.isActive}
+              onClick={() => setForm({ ...form, isActive: !form.isActive })}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] ${
+                form.isActive ? "bg-[#1E3A5F]" : "bg-gray-300"
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                  form.isActive ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+            <span className="text-sm font-medium text-gray-700">
+              Active (visible to learners)
+            </span>
           </div>
         </div>
 

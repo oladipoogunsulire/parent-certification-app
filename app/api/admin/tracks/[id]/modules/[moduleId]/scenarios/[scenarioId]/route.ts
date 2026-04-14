@@ -48,7 +48,7 @@ export async function PATCH(
 
   const { scenarioId } = await params
 
-  const { beltId, scenarioTitle, narrativeText, videoUrl, complexityLevel, xpValue, isRequired, responses } =
+  const { beltId, scenarioTitle, narrativeText, videoUrl, complexityLevel, xpValue, isRequired, isActive, responses } =
     await req.json()
 
   if (!beltId || !narrativeText || !scenarioTitle) {
@@ -69,6 +69,7 @@ export async function PATCH(
         complexityLevel: complexityLevel ?? 1,
         xpValue: xpValue ?? 30,
         isRequired: isRequired ?? true,
+        isActive: isActive ?? true,
       },
     })
 
