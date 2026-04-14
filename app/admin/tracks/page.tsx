@@ -15,23 +15,23 @@ export default async function AdminTracksPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-[#1E3A5F]">Modules</h2>
+        <h2 className="text-2xl font-bold text-[#1E3A5F]">Influence Labs</h2>
         <Link
           href="/admin/tracks/new"
           className="bg-[#1E3A5F] text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-[#162d4a]"
         >
-          Create Module
+          Create Influence Lab
         </Link>
       </div>
 
       {tracks.length === 0 ? (
         <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-          <p className="text-gray-500 mb-4">No modules yet.</p>
+          <p className="text-gray-500 mb-4">No Influence Labs yet.</p>
           <Link
             href="/admin/tracks/new"
             className="bg-[#1E3A5F] text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-[#162d4a]"
           >
-            Create your first module
+            Create your first Influence Lab
           </Link>
         </div>
       ) : (
@@ -40,7 +40,7 @@ export default async function AdminTracksPage() {
           <table className="w-full min-w-[640px]">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Module</th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Influence Lab</th>
                 <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Age Band</th>
                 <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Belts</th>
                 <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Modules</th>
@@ -78,14 +78,14 @@ export default async function AdminTracksPage() {
                       <Link
                         href={`/admin/tracks/${track.id}/edit`}
                         className="inline-flex items-center gap-1 text-sm text-[#F97316] hover:underline"
-                        title="Edit module"
+                        title="Edit Influence Lab"
                       >
                         <Pencil size={14} />
                         Edit
                       </Link>
                       <DeleteButton
                         url={`/api/admin/tracks/${track.id}`}
-                        confirmMessage={`Delete module "${track.trackName}"? This will permanently delete all lessons, scenarios, questions, and belts for this module.`}
+                        confirmMessage={`Delete Influence Lab "${track.trackName}"? This will permanently delete all lessons, scenarios, questions, and belts for this Influence Lab.`}
                         redirectTo="/admin/tracks"
                         label="Delete"
                         className="text-sm text-red-600 hover:underline"

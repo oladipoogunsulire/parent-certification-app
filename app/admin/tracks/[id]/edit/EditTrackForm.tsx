@@ -58,9 +58,9 @@ export default function EditTrackForm({ trackId, initial }: Props) {
     <div className="max-w-2xl">
       <div className="mb-6">
         <a href="/admin/tracks" className="text-sm text-[#1E3A5F] hover:underline">
-          ← Back to modules
+          ← Back to Influence Labs
         </a>
-        <h2 className="text-2xl font-bold text-[#1E3A5F] mt-2">Edit module</h2>
+        <h2 className="text-2xl font-bold text-[#1E3A5F] mt-2">Edit Influence Lab</h2>
       </div>
 
       {error && (
@@ -71,7 +71,7 @@ export default function EditTrackForm({ trackId, initial }: Props) {
 
       {success && (
         <div className="bg-green-50 border border-green-200 text-green-700 p-3 rounded-lg mb-4 text-sm">
-          Module updated successfully. Redirecting…
+          Influence Lab updated successfully. Redirecting…
         </div>
       )}
 
@@ -79,7 +79,7 @@ export default function EditTrackForm({ trackId, initial }: Props) {
         {/* Track name */}
         <div>
           <label className="block text-sm font-medium text-[#1E293B] mb-1">
-            Module name <span className="text-red-500">*</span>
+            Influence Lab name <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
@@ -101,7 +101,7 @@ export default function EditTrackForm({ trackId, initial }: Props) {
             onChange={(e) => setForm({ ...form, description: e.target.value })}
             className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] focus:border-[#1E3A5F]"
             rows={3}
-            placeholder="Brief description of this module..."
+            placeholder="Brief description of this Influence Lab..."
           />
         </div>
 
