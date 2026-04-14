@@ -50,21 +50,45 @@ export default async function ModuleDetailPage({
     }
   }
 
-  // Fetch user lesson progress for this module
+  // Fetch user lesson progress and scenario attempts for this module
   const completedLessonIds = new Set<string>()
   let lastVisitedLessonId: string | null = null
+  // Map scenarioId → { count: number, lastScore: number | null }
+  const scenarioAttemptMap = new Map<string, { count: number; lastScore: number | null }>()
 
   if (session?.user?.id) {
-    const progressRecords = await prisma.userLessonProgress.findMany({
-      where: { userId: session.user.id, lesson: { moduleId } },
-      orderBy: { lastVisitedAt: "desc" },
-      select: { lessonId: true, completed: true },
-    })
+    const [progressRecords, scenarioAttempts] = await Promise.all([
+      prisma.userLessonProgress.findMany({
+        where: { userId: session.user.id, lesson: { moduleId } },
+        orderBy: { lastVisitedAt: "desc" },
+        select: { lessonId: true, completed: true },
+      }),
+      prisma.userScenarioAttempt.findMany({
+        where: {
+          userId: session.user.id,
+          scenarioId: { in: mod.scenarios.map((s) => s.id) },
+        },
+        orderBy: { attemptNumber: "desc" },
+        select: { scenarioId: true, scoreEarned: true, attemptNumber: true },
+      }),
+    ])
+
     for (const p of progressRecords) {
       if (p.completed) completedLessonIds.add(p.lessonId)
     }
     if (progressRecords.length > 0) {
       lastVisitedLessonId = progressRecords[0].lessonId
+    }
+
+    // Build scenario attempt map — keep highest attemptNumber (latest) per scenario
+    for (const a of scenarioAttempts) {
+      const existing = scenarioAttemptMap.get(a.scenarioId)
+      if (!existing) {
+        // First entry is the latest (ordered desc)
+        scenarioAttemptMap.set(a.scenarioId, { count: 1, lastScore: a.scoreEarned })
+      } else {
+        existing.count += 1
+      }
     }
   }
 
@@ -252,15 +276,20 @@ export default async function ModuleDetailPage({
             )}
 
             <div className="space-y-3 mt-4">
-              {mod.scenarios.map((scenario, index) => (
-                <div
-                  key={scenario.id}
-                  className={`p-4 rounded-lg border ${
-                    allLessonsComplete
-                      ? "border-gray-100"
-                      : "border-gray-100 bg-gray-50/50"
-                  }`}
-                >
+              {mod.scenarios.map((scenario, index) => {
+                const attemptData = scenarioAttemptMap.get(scenario.id)
+                const attemptCount = attemptData?.count ?? 0
+                const lastScore   = attemptData?.lastScore ?? null
+                const scoreLabel  = lastScore === 10 ? "Best" : lastScore === 7 ? "Good" : lastScore === 5 ? "Neutral" : lastScore === 3 ? "Weak" : null
+                const scoreBadgeColor = lastScore === 10
+                  ? "bg-green-100 text-green-800"
+                  : lastScore === 7
+                  ? "bg-blue-100 text-blue-800"
+                  : lastScore === 5
+                  ? "bg-yellow-100 text-yellow-800"
+                  : "bg-gray-100 text-gray-600"
+
+                const cardContent = (
                   <div className="flex items-start gap-3">
                     {/* Lock icon when locked */}
                     {!allLessonsComplete && (
@@ -278,25 +307,37 @@ export default async function ModuleDetailPage({
                       </svg>
                     )}
                     <div className="min-w-0 flex-1">
-                      <p
-                        className={`font-medium ${
-                          allLessonsComplete
-                            ? "text-foreground"
-                            : "text-foreground/40"
-                        }`}
-                      >
-                        {index + 1}.{" "}
-                        {scenario.scenarioTitle ?? `Scenario ${index + 1}`}
-                      </p>
+                      <div className="flex flex-wrap items-center gap-2 mb-0.5">
+                        <p
+                          className={`font-medium ${
+                            allLessonsComplete ? "text-foreground" : "text-foreground/40"
+                          }`}
+                        >
+                          {index + 1}.{" "}
+                          {scenario.scenarioTitle ?? `Scenario ${index + 1}`}
+                        </p>
+                        {/* Last score badge — only when unlocked and attempted */}
+                        {allLessonsComplete && lastScore !== null && scoreLabel && (
+                          <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full ${scoreBadgeColor}`}>
+                            {lastScore} — {scoreLabel}
+                          </span>
+                        )}
+                      </div>
                       <p
                         className={`text-xs mt-0.5 ${
-                          allLessonsComplete
-                            ? "text-foreground/50"
-                            : "text-foreground/30"
+                          allLessonsComplete ? "text-foreground/50" : "text-foreground/30"
                         }`}
                       >
                         Complexity {scenario.complexityLevel} · {scenario.xpValue} XP
                         {scenario.isRequired ? " · Required" : ""}
+                        {allLessonsComplete && (
+                          <>
+                            {" · "}
+                            {attemptCount === 0
+                              ? "Not attempted"
+                              : `Attempted ${attemptCount} time${attemptCount !== 1 ? "s" : ""}`}
+                          </>
+                        )}
                       </p>
                       {/* Show narrative only when unlocked */}
                       {allLessonsComplete && scenario.narrativeText && (
@@ -305,9 +346,32 @@ export default async function ModuleDetailPage({
                         </p>
                       )}
                     </div>
+                    {/* Arrow when unlocked */}
+                    {allLessonsComplete && (
+                      <svg className="w-4 h-4 text-foreground/30 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    )}
                   </div>
-                </div>
-              ))}
+                )
+
+                return allLessonsComplete ? (
+                  <a
+                    key={scenario.id}
+                    href={`/modules/${moduleId}/scenarios/${scenario.id}`}
+                    className="block p-4 rounded-lg border border-gray-100 hover:border-[#F97316]/40 hover:bg-[#F97316]/5 transition-colors"
+                  >
+                    {cardContent}
+                  </a>
+                ) : (
+                  <div
+                    key={scenario.id}
+                    className="p-4 rounded-lg border border-gray-100 bg-gray-50/50"
+                  >
+                    {cardContent}
+                  </div>
+                )
+              })}
             </div>
           </div>
         )}
