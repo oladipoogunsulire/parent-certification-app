@@ -126,6 +126,8 @@ export async function getTrackProgressMap(
 
 /**
  * Returns the most recently active module for a user (for "Continue Learning" on the dashboard).
+ * Only returns a result when the lesson, module, and track are all active.
+ * The lastLessonId is guaranteed to be an active lesson within that module.
  */
 export async function getRecentActivity(userId: string): Promise<{
   trackId: string
@@ -138,8 +140,19 @@ export async function getRecentActivity(userId: string): Promise<{
   percentage: number
   isCompleted: boolean
 } | null> {
+  // Require the lesson, its module, and the module's track to all be active.
+  // This prevents the card from surfacing content that has been deactivated.
   const recent = await prisma.userLessonProgress.findFirst({
-    where: { userId },
+    where: {
+      userId,
+      lesson: {
+        isActive: true,
+        module: {
+          isActive: true,
+          track: { isActive: true },
+        },
+      },
+    },
     orderBy: { lastVisitedAt: "desc" },
     select: {
       lessonId: true,
@@ -152,6 +165,7 @@ export async function getRecentActivity(userId: string): Promise<{
               moduleTitle: true,
               trackId: true,
               track: { select: { trackName: true } },
+              // Only count active lessons so total reflects what the user can still access
               lessons: {
                 where: { isActive: true },
                 select: { id: true },
@@ -168,9 +182,13 @@ export async function getRecentActivity(userId: string): Promise<{
   const mod = recent.lesson.module
   const total = mod.lessons.length
 
-  // Count completions for this module
+  // Count completions only against active lessons so the percentage is accurate
   const completedCount = await prisma.userLessonProgress.count({
-    where: { userId, completed: true, lesson: { moduleId: mod.id } },
+    where: {
+      userId,
+      completed: true,
+      lesson: { moduleId: mod.id, isActive: true },
+    },
   })
 
   const percentage = total > 0 ? Math.round((completedCount / total) * 100) : 0
