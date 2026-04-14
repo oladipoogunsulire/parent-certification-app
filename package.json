@@ -10,7 +10,8 @@
     "postinstall": "prisma generate",
     "seed:admin": "tsx prisma/seed-admin.ts",
     "promote:admin": "tsx prisma/promote-admin.ts",
-    "reset:password": "tsx scripts/reset-user-password.ts"
+    "reset:password": "tsx scripts/reset-user-password.ts",
+    "reset:influence-data": "tsx scripts/reset-influence-data.ts"
   },
   "dependencies": {
     "@auth/core": "0.41.1",

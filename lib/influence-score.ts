@@ -22,10 +22,12 @@ export function getInfluenceLevel(score: number): string {
 // Records a user's response to a scenario, then upserts their
 // UserInfluenceProfile with a recalculated running average score.
 //
-// Formula: influenceScore = (totalScorePoints / totalAttempts) * 10
-// This converts the 3–10 response scale to a 30–100 percentage range.
+// Formula: influenceScore = totalScorePoints / totalAttempts
+// scoreImpact values are stored on a 0–100 scale; running average
+// gives a direct 0–100 influence score — no multiplier needed.
 //
-// All writes are wrapped in a single transaction.
+// Note: the Neon HTTP adapter does not support interactive $transaction
+// callbacks, so each operation is issued as an individual Prisma call.
 // ---------------------------------------------------------------------------
 
 export async function recordScenarioAttempt(
@@ -33,69 +35,64 @@ export async function recordScenarioAttempt(
   scenarioId: string,
   selectedResponseId: string
 ): Promise<UserInfluenceProfile> {
-  return prisma.$transaction(async (tx) => {
-    // 1. Fetch the selected response to get its scoreImpact
-    const selectedResponse = await tx.scenarioResponse.findUniqueOrThrow({
-      where: { id: selectedResponseId },
-      select: { id: true, scenarioId: true, scoreImpact: true },
-    })
-
-    // Guard: the response must belong to the requested scenario
-    if (selectedResponse.scenarioId !== scenarioId) {
-      throw new Error("selectedResponseId does not belong to the given scenarioId")
-    }
-
-    // 2. Count existing attempts to determine the next attemptNumber
-    const existingAttemptCount = await tx.userScenarioAttempt.count({
-      where: { userId, scenarioId },
-    })
-
-    // 3. Create the new attempt record
-    await tx.userScenarioAttempt.create({
-      data: {
-        id: generateCuid(),
-        userId,
-        scenarioId,
-        selectedResponseId,
-        scoreEarned: selectedResponse.scoreImpact,
-        attemptNumber: existingAttemptCount + 1,
-      },
-    })
-
-    // 4. Read the existing profile so we can compute precise new totals
-    const existing = await tx.userInfluenceProfile.findUnique({
-      where: { userId },
-    })
-
-    const newTotalAttempts    = (existing?.totalAttempts    ?? 0) + 1
-    const newTotalScorePoints = (existing?.totalScorePoints ?? 0) + selectedResponse.scoreImpact
-    const newInfluenceScore   = (newTotalScorePoints / newTotalAttempts) * 10
-    const newInfluenceLevel   = getInfluenceLevel(newInfluenceScore)
-    const now                 = new Date()
-
-    // 5. Upsert the profile with recalculated values
-    return tx.userInfluenceProfile.upsert({
-      where: { userId },
-      update: {
-        totalAttempts:    newTotalAttempts,
-        totalScorePoints: newTotalScorePoints,
-        influenceScore:   newInfluenceScore,
-        influenceLevel:   newInfluenceLevel,
-        lastCalculatedAt: now,
-        updatedAt:        now,
-      },
-      create: {
-        id:               generateCuid(),
-        userId,
-        totalAttempts:    1,
-        totalScorePoints: selectedResponse.scoreImpact,
-        influenceScore:   selectedResponse.scoreImpact * 10,
-        influenceLevel:   getInfluenceLevel(selectedResponse.scoreImpact * 10),
-        lastCalculatedAt: now,
-        updatedAt:        now,
-      },
-    })
+  // Step 1 — Validate response belongs to scenario
+  const response = await prisma.scenarioResponse.findFirst({
+    where: { id: selectedResponseId, scenarioId },
   })
+  if (!response) throw new Error("Invalid response for this scenario")
+
+  // Step 2 — Count prior attempts for attempt number
+  const priorAttempts = await prisma.userScenarioAttempt.count({
+    where: { userId, scenarioId },
+  })
+
+  // Step 3 — Create the attempt record
+  await prisma.userScenarioAttempt.create({
+    data: {
+      id: generateCuid(),
+      userId,
+      scenarioId,
+      selectedResponseId,
+      scoreEarned: response.scoreImpact,
+      attemptNumber: priorAttempts + 1,
+    },
+  })
+
+  // Step 4 — Fetch existing profile
+  const existingProfile = await prisma.userInfluenceProfile.findUnique({
+    where: { userId },
+  })
+
+  // Step 5 — Calculate new totals
+  // scoreImpact values are stored on a 0–100 scale
+  // running average gives a direct 0–100 influence score
+  const totalAttempts    = (existingProfile?.totalAttempts    ?? 0) + 1
+  const totalScorePoints = (existingProfile?.totalScorePoints ?? 0) + response.scoreImpact
+  const influenceScore   = totalScorePoints / totalAttempts
+  const influenceLevel   = getInfluenceLevel(influenceScore)
+
+  // Step 6 — Upsert the influence profile
+  const profile = await prisma.userInfluenceProfile.upsert({
+    where: { userId },
+    create: {
+      id: generateCuid(),
+      userId,
+      influenceScore,
+      totalAttempts,
+      totalScorePoints,
+      influenceLevel,
+      lastCalculatedAt: new Date(),
+    },
+    update: {
+      influenceScore,
+      totalAttempts,
+      totalScorePoints,
+      influenceLevel,
+      lastCalculatedAt: new Date(),
+    },
+  })
+
+  return profile
 }
 
 // ---------------------------------------------------------------------------
