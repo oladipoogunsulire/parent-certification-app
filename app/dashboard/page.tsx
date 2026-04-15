@@ -74,17 +74,13 @@ export default async function DashboardPage() {
   const recentActivity = await getRecentActivity(userId)
 
   // Influence Score™ profile + scenarios completed count
-  const [influenceProfile, scenarioRows] = await Promise.all([
+  const [influenceProfile, scenarioGroups] = await Promise.all([
     getUserInfluenceProfile(userId).catch(() => null),
     prisma.userScenarioAttempt
-      .findMany({
-        where: { userId },
-        distinct: ["scenarioId"],
-        select: { scenarioId: true },
-      })
+      .groupBy({ by: ["scenarioId"], where: { userId } })
       .catch(() => []),
   ])
-  const scenariosCompleted = scenarioRows.length
+  const scenariosCompleted = scenarioGroups.length
 
   return (
     <div className="min-h-screen bg-background">

@@ -18,16 +18,15 @@ export async function GET() {
     return NextResponse.json({ error: "User not found." }, { status: 401 })
   }
 
-  const [profile, scenarioRows] = await Promise.all([
+  const [profile, scenarioGroups] = await Promise.all([
     getUserInfluenceProfile(user.id),
-    prisma.userScenarioAttempt.findMany({
+    prisma.userScenarioAttempt.groupBy({
+      by: ["scenarioId"],
       where: { userId: user.id },
-      distinct: ["scenarioId"],
-      select: { scenarioId: true },
     }),
   ])
 
-  const scenariosCompleted = scenarioRows.length
+  const scenariosCompleted = scenarioGroups.length
 
   if (!profile) {
     return NextResponse.json({
