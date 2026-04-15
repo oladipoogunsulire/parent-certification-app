@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { recordScenarioAttempt } from "@/lib/influence-score"
+import { checkAndAwardBelt } from "@/lib/module-completion"
 
 export async function POST(
   req: NextRequest,
@@ -58,6 +59,13 @@ export async function POST(
       selectedResponseId
     )
 
+    // Check belt progression after recording the attempt
+    const beltUpdate = await checkAndAwardBelt(user.id).catch(() => ({
+      beltChanged: false,
+      newBelt: null,
+      previousBelt: null,
+    }))
+
     // Fetch the newly-created attempt (last one for this user+scenario)
     const attempt = await prisma.userScenarioAttempt.findFirst({
       where: { userId: user.id, scenarioId },
@@ -69,6 +77,7 @@ export async function POST(
       selectedResponse,
       influenceProfile,
       isRetake: priorAttemptCount > 0,
+      beltUpdate,
     })
   } catch (error) {
     console.error("Scenario attempt error:", error)

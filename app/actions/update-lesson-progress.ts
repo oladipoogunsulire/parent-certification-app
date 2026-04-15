@@ -3,10 +3,12 @@
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
+import { checkAndAwardBelt } from "@/lib/module-completion"
 
 /**
  * Upserts a UserLessonProgress record.
  * Call with markCompleted=false to record a visit, or markCompleted=true to mark lesson done.
+ * When markCompleted=true, also checks whether a belt has been earned.
  */
 export async function updateLessonProgress(
   lessonId: string,
@@ -35,7 +37,18 @@ export async function updateLessonProgress(
 
     revalidatePath("/tracks", "layout")
     revalidatePath("/dashboard")
-    return { success: true }
+
+    // Belt check — only after marking a lesson complete
+    if (markCompleted) {
+      const beltUpdate = await checkAndAwardBelt(userId).catch(() => ({
+        beltChanged: false,
+        newBelt: null as string | null,
+        previousBelt: null as string | null,
+      }))
+      return { success: true, beltUpdate }
+    }
+
+    return { success: true, beltUpdate: null }
   } catch {
     return { error: "Something went wrong." }
   }

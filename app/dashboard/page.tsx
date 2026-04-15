@@ -67,9 +67,8 @@ export default async function DashboardPage() {
       m.lessons.length > 0 && m.lessons.every((l) => completedLessonIds.has(l.id))
   ).length
 
-  // "Belts Earned" = active certifications
-  const beltsEarned =
-    user?.certifications.filter((c) => c.status === "ACTIVE").length ?? 0
+  // "Belts Earned" = derived from the user's current belt progression
+  const beltsEarned = beltCount(user?.currentBelt ?? null)
 
   // "Continue Learning" — most recently visited module context
   const recentActivity = await getRecentActivity(userId)
@@ -297,6 +296,19 @@ export default async function DashboardPage() {
       </main>
     </div>
   )
+}
+
+function beltCount(belt: string | null): number {
+  if (!belt) return 0
+  const map: Record<string, number> = {
+    "White Belt":  1,
+    "Yellow Belt": 2,
+    "Green Belt":  3,
+    "Blue Belt":   4,
+    "Brown Belt":  5,
+    "Black Belt":  6,
+  }
+  return map[belt] ?? 0
 }
 
 function influenceBadgeClass(level: string): string {

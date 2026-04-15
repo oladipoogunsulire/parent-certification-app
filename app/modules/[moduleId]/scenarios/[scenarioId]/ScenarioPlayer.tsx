@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import VideoPlayer from "@/app/components/VideoPlayer"
+import BeltAwardModal from "@/app/components/BeltAwardModal"
 
 // ---------------------------------------------------------------------------
 // Types
@@ -23,6 +24,12 @@ interface ResponseData {
   explanationText: string | null
 }
 
+interface BeltUpdate {
+  beltChanged: boolean
+  newBelt: string | null
+  previousBelt: string | null
+}
+
 interface AttemptResult {
   attempt: { id: string; attemptNumber: number; scoreEarned: number }
   selectedResponse: ResponseData
@@ -32,6 +39,7 @@ interface AttemptResult {
     totalAttempts: number
   }
   isRetake: boolean
+  beltUpdate: BeltUpdate
 }
 
 interface Props {
@@ -84,11 +92,12 @@ export default function ScenarioPlayer({
   currentInfluenceLevel,
   hasEverScored,
 }: Props) {
-  const [selectedId, setSelectedId]       = useState<string | null>(null)
-  const [submitting, setSubmitting]        = useState(false)
-  const [apiError, setApiError]            = useState<string | null>(null)
-  const [result, setResult]               = useState<AttemptResult | null>(null)
-  const [showBestResponse, setShowBestResponse] = useState(false)
+  const [selectedId, setSelectedId]             = useState<string | null>(null)
+  const [submitting, setSubmitting]              = useState(false)
+  const [apiError, setApiError]                  = useState<string | null>(null)
+  const [result, setResult]                      = useState<AttemptResult | null>(null)
+  const [showBestResponse, setShowBestResponse]  = useState(false)
+  const [showBeltModal, setShowBeltModal]        = useState(false)
 
   const displayTitle = scenario.scenarioTitle ?? "Scenario"
   const optimalResponse = responses.find((r) => r.isOptimal) ?? null
@@ -111,6 +120,9 @@ export default function ScenarioPlayer({
         return
       }
       setResult(data as AttemptResult)
+      if (data.beltUpdate?.beltChanged && data.beltUpdate?.newBelt) {
+        setShowBeltModal(true)
+      }
     } catch {
       setApiError("Something went wrong. Your response was not saved. Please try again.")
     } finally {
@@ -293,6 +305,14 @@ export default function ScenarioPlayer({
             to   { opacity: 1; transform: scale(1); }
           }
         `}</style>
+
+        {/* Belt award modal — fixed overlay, renders on top of results */}
+        {showBeltModal && result.beltUpdate?.newBelt && (
+          <BeltAwardModal
+            beltName={result.beltUpdate.newBelt}
+            onClose={() => setShowBeltModal(false)}
+          />
+        )}
       </div>
     )
   }

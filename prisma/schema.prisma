@@ -25,6 +25,8 @@ model User {
   displayName    String?
   role           Role      @default(USER)
   isActive       Boolean   @default(true)
+  currentBelt    String?
+  beltEarnedAt   DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
