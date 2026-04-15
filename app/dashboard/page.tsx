@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma"
 import AppHeader from "@/app/components/AppHeader"
 import SecurityQuestionsBanner from "@/app/components/SecurityQuestionsBanner"
 import { getRecentActivity } from "@/lib/progress"
+import { getUserInfluenceProfile } from "@/lib/influence-score"
 
 export default async function DashboardPage() {
   const session = await auth()
@@ -72,6 +73,19 @@ export default async function DashboardPage() {
 
   // "Continue Learning" — most recently visited module context
   const recentActivity = await getRecentActivity(userId)
+
+  // Influence Score™ profile + scenarios completed count
+  const [influenceProfile, scenarioRows] = await Promise.all([
+    getUserInfluenceProfile(userId).catch(() => null),
+    prisma.userScenarioAttempt
+      .findMany({
+        where: { userId },
+        distinct: ["scenarioId"],
+        select: { scenarioId: true },
+      })
+      .catch(() => []),
+  ])
+  const scenariosCompleted = scenarioRows.length
 
   return (
     <div className="min-h-screen bg-background">
@@ -164,6 +178,59 @@ export default async function DashboardPage() {
           </div>
         )}
 
+        {/* ── Influence Score™ card ─────────────────────────────── */}
+        {influenceProfile ? (
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-8">
+            <p className="text-xs font-semibold text-accent uppercase tracking-wider mb-4">
+              Influence Score™
+            </p>
+            <div className="flex flex-col sm:flex-row items-start gap-6">
+              <div className="flex-1 min-w-0 w-full">
+                {/* Level badge + description */}
+                <span className={`inline-block px-3 py-1.5 rounded-full text-sm font-bold mb-1.5 ${influenceBadgeClass(influenceProfile.influenceLevel)}`}>
+                  {influenceProfile.influenceLevel}
+                </span>
+                <p className="text-sm text-foreground/60 mb-4">
+                  {influenceLevelDescription(influenceProfile.influenceLevel)}
+                </p>
+                {/* Score number */}
+                <div className="flex items-baseline gap-1.5 mb-3">
+                  <span className="text-4xl font-bold text-primary">
+                    {Math.round(influenceProfile.influenceScore)}
+                  </span>
+                  <span className="text-sm text-foreground/50">out of 100</span>
+                </div>
+                {/* Progress bar */}
+                <div className="w-full bg-gray-100 rounded-full h-2.5 mb-2">
+                  <div
+                    className={`h-2.5 rounded-full transition-all ${influenceBarClass(influenceProfile.influenceLevel)}`}
+                    style={{ width: `${Math.round(influenceProfile.influenceScore)}%` }}
+                  />
+                </div>
+                {/* Attempts subtext */}
+                <p className="text-xs text-foreground/40">
+                  Based on {influenceProfile.totalAttempts} scenario response{influenceProfile.totalAttempts !== 1 ? "s" : ""}
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-8">
+            <p className="text-xs font-semibold text-accent uppercase tracking-wider mb-3">
+              Influence Score™
+            </p>
+            <p className="text-sm text-foreground/60 mb-4">
+              Your Influence Score™ will appear here once you complete your first scenario
+            </p>
+            <a
+              href="/modules"
+              className="inline-block bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary-hover transition-colors"
+            >
+              Go to Modules
+            </a>
+          </div>
+        )}
+
         {/* ── Certifications / Belts grid ───────────────────────── */}
         {(user?.certifications.length ?? 0) > 0 && (
           <div className="mb-8">
@@ -207,17 +274,21 @@ export default async function DashboardPage() {
         )}
 
         {/* ── Stats row ─────────────────────────────────────────── */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white rounded-lg border border-gray-100 border-l-4 border-l-accent shadow-sm p-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-white rounded-lg border border-gray-100 border-l-4 border-l-accent shadow-sm p-5">
             <p className="text-sm text-foreground/60">Modules Completed</p>
             <p className="text-2xl font-bold text-primary mt-1">{modulesCompleted}</p>
           </div>
-          <div className="bg-white rounded-lg border border-gray-100 border-l-4 border-l-accent shadow-sm p-6">
+          <div className="bg-white rounded-lg border border-gray-100 border-l-4 border-l-accent shadow-sm p-5">
             <p className="text-sm text-foreground/60">Belts Earned</p>
             <p className="text-2xl font-bold text-primary mt-1">{beltsEarned}</p>
           </div>
-          <div className="bg-white rounded-lg border border-gray-100 border-l-4 border-l-accent shadow-sm p-6">
-            <p className="text-sm text-foreground/60">Account status</p>
+          <div className="bg-white rounded-lg border border-gray-100 border-l-4 border-l-accent shadow-sm p-5">
+            <p className="text-sm text-foreground/60">Scenarios Completed</p>
+            <p className="text-2xl font-bold text-primary mt-1">{scenariosCompleted}</p>
+          </div>
+          <div className="bg-white rounded-lg border border-gray-100 border-l-4 border-l-accent shadow-sm p-5">
+            <p className="text-sm text-foreground/60">Account Status</p>
             <p className="text-2xl font-bold text-primary mt-1">
               {hasActiveSubscription ? "Active" : "Free"}
             </p>
@@ -226,6 +297,33 @@ export default async function DashboardPage() {
       </main>
     </div>
   )
+}
+
+function influenceBadgeClass(level: string): string {
+  switch (level) {
+    case "Ultimate Influencer™": return "bg-[#1E3A5F] text-yellow-400"
+    case "Intentional Parent":   return "bg-[#F97316] text-white"
+    case "Developing Parent":    return "bg-blue-600 text-white"
+    default:                     return "bg-gray-100 text-gray-700"
+  }
+}
+
+function influenceBarClass(level: string): string {
+  switch (level) {
+    case "Ultimate Influencer™": return "bg-[#1E3A5F]"
+    case "Intentional Parent":   return "bg-[#F97316]"
+    case "Developing Parent":    return "bg-blue-500"
+    default:                     return "bg-gray-400"
+  }
+}
+
+function influenceLevelDescription(level: string): string {
+  switch (level) {
+    case "Ultimate Influencer™": return "You are your child's most powerful influence"
+    case "Intentional Parent":   return "You're making a real difference in your child's life"
+    case "Developing Parent":    return "You're building intentional parenting habits"
+    default:                     return "You're beginning your influence journey"
+  }
 }
 
 function beltBadge(level: string): string {

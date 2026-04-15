@@ -18,19 +18,30 @@ export async function GET() {
     return NextResponse.json({ error: "User not found." }, { status: 401 })
   }
 
-  const profile = await getUserInfluenceProfile(user.id)
+  const [profile, scenarioRows] = await Promise.all([
+    getUserInfluenceProfile(user.id),
+    prisma.userScenarioAttempt.findMany({
+      where: { userId: user.id },
+      distinct: ["scenarioId"],
+      select: { scenarioId: true },
+    }),
+  ])
+
+  const scenariosCompleted = scenarioRows.length
 
   if (!profile) {
     return NextResponse.json({
+      hasStarted: false,
       influenceScore: 0,
       influenceLevel: "Reactive Parent",
       totalAttempts: 0,
-      hasStarted: false,
+      scenariosCompleted,
     })
   }
 
   return NextResponse.json({
     ...profile,
     hasStarted: true,
+    scenariosCompleted,
   })
 }

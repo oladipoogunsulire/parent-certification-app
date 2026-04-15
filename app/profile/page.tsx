@@ -3,6 +3,7 @@ import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import AppHeader from "@/app/components/AppHeader"
 import ProfileForm from "./ProfileForm"
+import { getUserInfluenceProfile } from "@/lib/influence-score"
 
 export const metadata = {
   title: "My Profile — The Ultimate Influencer™",
@@ -66,6 +67,34 @@ export default async function ProfilePage() {
   const accountStatus =
     user.subscriptions.length > 0 ? "Premium" : "Free"
 
+  // Influence Score™ profile + distinct scenarios attempted
+  const [rawInfluenceProfile, scenarioRows] = await Promise.all([
+    getUserInfluenceProfile(user.id).catch(() => null),
+    prisma.userScenarioAttempt
+      .findMany({
+        where: { userId: user.id },
+        distinct: ["scenarioId"],
+        select: { scenarioId: true },
+      })
+      .catch(() => []),
+  ])
+
+  const influenceProfile = rawInfluenceProfile
+    ? {
+        hasStarted: true as const,
+        influenceScore: rawInfluenceProfile.influenceScore,
+        influenceLevel: rawInfluenceProfile.influenceLevel,
+        totalAttempts: rawInfluenceProfile.totalAttempts,
+        scenariosCompleted: scenarioRows.length,
+      }
+    : {
+        hasStarted: false as const,
+        influenceScore: 0,
+        influenceLevel: "Reactive Parent",
+        totalAttempts: 0,
+        scenariosCompleted: scenarioRows.length,
+      }
+
   return (
     <>
       <AppHeader />
@@ -83,6 +112,7 @@ export default async function ProfilePage() {
           modulesCompleted: user.ceRecords.length,
         }}
         hasSecurityQuestions={!!user.securityQuestion}
+        influenceProfile={influenceProfile}
       />
     </>
   )

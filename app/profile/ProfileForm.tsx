@@ -3,6 +3,14 @@
 import { useState } from "react"
 import { updateProfile } from "@/app/actions/update-profile"
 
+interface InfluenceProfile {
+  hasStarted: boolean
+  influenceScore: number
+  influenceLevel: string
+  totalAttempts: number
+  scenariosCompleted: number
+}
+
 interface Props {
   user: {
     firstName: string
@@ -17,9 +25,53 @@ interface Props {
     modulesCompleted: number
   }
   hasSecurityQuestions: boolean
+  influenceProfile: InfluenceProfile
 }
 
-export default function ProfileForm({ user, stats, hasSecurityQuestions }: Props) {
+const INFLUENCE_LEVELS = [
+  "Reactive Parent",
+  "Developing Parent",
+  "Intentional Parent",
+  "Ultimate Influencer™",
+] as const
+
+function influenceBadgeClass(level: string): string {
+  switch (level) {
+    case "Ultimate Influencer™": return "bg-[#1E3A5F] text-yellow-400"
+    case "Intentional Parent":   return "bg-[#F97316] text-white"
+    case "Developing Parent":    return "bg-blue-600 text-white"
+    default:                     return "bg-gray-100 text-gray-700"
+  }
+}
+
+function influenceBarClass(level: string): string {
+  switch (level) {
+    case "Ultimate Influencer™": return "bg-[#1E3A5F]"
+    case "Intentional Parent":   return "bg-[#F97316]"
+    case "Developing Parent":    return "bg-blue-500"
+    default:                     return "bg-gray-400"
+  }
+}
+
+function influenceLevelDescription(level: string): string {
+  switch (level) {
+    case "Ultimate Influencer™": return "You are your child's most powerful influence"
+    case "Intentional Parent":   return "You're making a real difference in your child's life"
+    case "Developing Parent":    return "You're building intentional parenting habits"
+    default:                     return "You're beginning your influence journey"
+  }
+}
+
+function headerBadgeClass(level: string): string {
+  switch (level) {
+    case "Ultimate Influencer™": return "bg-[#1E3A5F]/10 text-[#1E3A5F]"
+    case "Intentional Parent":   return "bg-[#F97316]/10 text-[#F97316]"
+    case "Developing Parent":    return "bg-blue-100 text-blue-700"
+    default:                     return "bg-accent/10 text-accent"
+  }
+}
+
+export default function ProfileForm({ user, stats, hasSecurityQuestions, influenceProfile }: Props) {
   const [firstName, setFirstName] = useState(user.firstName)
   const [lastName, setLastName]   = useState(user.lastName)
   const [loading, setLoading]     = useState(false)
@@ -84,8 +136,8 @@ export default function ProfileForm({ user, stats, hasSecurityQuestions }: Props
           <div className="text-center sm:text-left">
             <h1 className="text-2xl font-bold text-primary">{fullName}</h1>
             <p className="text-foreground/60 text-sm mt-1">{user.email}</p>
-            <span className="inline-flex items-center mt-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-semibold">
-              Reactive Parent
+            <span className={`inline-flex items-center mt-2 px-3 py-1 rounded-full text-xs font-semibold ${headerBadgeClass(influenceProfile.influenceLevel)}`}>
+              {influenceProfile.influenceLevel}
             </span>
           </div>
         </div>
@@ -268,35 +320,103 @@ export default function ProfileForm({ user, stats, hasSecurityQuestions }: Props
               <p className="text-sm text-foreground/60 mt-1">Modules Completed</p>
             </div>
             <div className="bg-background rounded-lg border border-gray-100 p-4 text-center">
-              <p className="text-3xl font-bold text-primary">0</p>
-              <p className="text-sm text-foreground/60 mt-1">Influence Score</p>
-              <p className="text-xs text-accent mt-0.5 font-medium">Coming soon</p>
+              <p className="text-3xl font-bold text-primary">{influenceProfile.scenariosCompleted}</p>
+              <p className="text-sm text-foreground/60 mt-1">Scenarios Attempted</p>
             </div>
           </div>
 
-          {/* Current level */}
-          <div className="mb-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-foreground">Current level</span>
-              <span className="text-xs font-semibold text-accent bg-accent/10 px-2 py-0.5 rounded-full">
-                Reactive Parent
-              </span>
+          {influenceProfile.hasStarted ? (
+            <>
+              {/* Level badge + description */}
+              <div className="flex flex-wrap items-center gap-3 mb-2">
+                <span className={`inline-block px-3 py-1.5 rounded-full text-sm font-bold ${influenceBadgeClass(influenceProfile.influenceLevel)}`}>
+                  {influenceProfile.influenceLevel}
+                </span>
+              </div>
+              <p className="text-sm text-foreground/60 mb-4">
+                {influenceLevelDescription(influenceProfile.influenceLevel)}
+              </p>
+
+              {/* Score + progress bar */}
+              <div className="mb-1 flex items-baseline gap-1.5">
+                <span className="text-3xl font-bold text-primary">
+                  {Math.round(influenceProfile.influenceScore)}
+                </span>
+                <span className="text-sm text-foreground/50">out of 100</span>
+              </div>
+              <div className="w-full bg-gray-100 rounded-full h-2.5 mb-1.5">
+                <div
+                  className={`h-2.5 rounded-full transition-all ${influenceBarClass(influenceProfile.influenceLevel)}`}
+                  style={{ width: `${Math.round(influenceProfile.influenceScore)}%` }}
+                />
+              </div>
+              <p className="text-xs text-foreground/40 mb-6">
+                Based on {influenceProfile.totalAttempts} scenario response{influenceProfile.totalAttempts !== 1 ? "s" : ""}
+              </p>
+
+              {/* Level progression indicator */}
+              <div>
+                <p className="text-xs font-semibold text-foreground/50 uppercase tracking-wide mb-3">
+                  Level Progression
+                </p>
+                <div className="space-y-2">
+                  {INFLUENCE_LEVELS.map((lvl, i) => {
+                    const currentIndex = INFLUENCE_LEVELS.indexOf(
+                      influenceProfile.influenceLevel as typeof INFLUENCE_LEVELS[number]
+                    )
+                    const isCompleted = i < currentIndex
+                    const isCurrent   = i === currentIndex
+                    const isUpcoming  = i > currentIndex
+
+                    return (
+                      <div key={lvl} className="flex items-center gap-3">
+                        {/* Dot */}
+                        <div
+                          className={`w-3 h-3 rounded-full flex-shrink-0 border-2 ${
+                            isCompleted
+                              ? "bg-green-500 border-green-500"
+                              : isCurrent
+                              ? "bg-[#F97316] border-[#F97316]"
+                              : "bg-transparent border-gray-300"
+                          }`}
+                        />
+                        {/* Label */}
+                        <span
+                          className={`text-sm ${
+                            isCurrent
+                              ? "font-bold text-foreground"
+                              : isCompleted
+                              ? "text-foreground/60"
+                              : "text-foreground/30"
+                          }`}
+                        >
+                          {lvl}
+                        </span>
+                        {/* Current marker */}
+                        {isCurrent && (
+                          <span className="text-xs font-semibold text-[#F97316] ml-1">
+                            ← You are here
+                          </span>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-4">
+              <p className="text-sm text-foreground/60 mb-3">
+                Your Influence Score™ will appear here once you complete your first scenario
+              </p>
+              <a
+                href="/modules"
+                className="inline-block bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary-hover transition-colors"
+              >
+                Go to Modules
+              </a>
             </div>
-            <div className="text-xs text-foreground/50 flex justify-between mb-1.5">
-              <span>Reactive Parent</span>
-              <span>Developing Parent →</span>
-            </div>
-            {/* Progress bar — placeholder at 0% */}
-            <div className="w-full bg-gray-100 rounded-full h-2">
-              <div
-                className="bg-accent h-2 rounded-full transition-all"
-                style={{ width: "0%" }}
-              />
-            </div>
-            <p className="text-xs text-foreground/40 mt-1.5">
-              Complete modules and earn belts to raise your Influence Score.
-            </p>
-          </div>
+          )}
         </div>
 
       </main>
