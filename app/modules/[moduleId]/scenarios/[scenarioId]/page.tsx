@@ -54,14 +54,39 @@ export default async function ScenarioPage({
     redirect(`/modules/${moduleId}`)
   }
 
-  // Fetch user's prior attempts for this scenario
-  const priorAttempts = await prisma.userScenarioAttempt.findMany({
-    where: { userId: session.user.id, scenarioId },
-    orderBy: { attemptNumber: "asc" },
+  // Fetch all active scenarios for this module — ordered consistently
+  const allModuleScenarios = await prisma.scenario.findMany({
+    where: { moduleId, isActive: true },
+    orderBy: { createdAt: "asc" },
+    select: { id: true },
   })
+  const allScenarioIds = allModuleScenarios.map((s) => s.id)
+  const scenarioIndex  = allScenarioIds.indexOf(scenarioId) + 1   // 1-based
+  const totalScenarios = allScenarioIds.length
 
-  // Fetch the user's current influence profile (pre-attempt state)
-  const influenceProfile = await getUserInfluenceProfile(session.user.id)
+  // Fetch which scenarios in this module the user has already attempted
+  const [priorAttempts, attemptedRows, influenceProfile] = await Promise.all([
+    prisma.userScenarioAttempt.findMany({
+      where: { userId: session.user.id, scenarioId },
+      orderBy: { attemptNumber: "asc" },
+    }),
+    prisma.userScenarioAttempt.findMany({
+      where: {
+        userId: session.user.id,
+        scenarioId: { in: allScenarioIds },
+      },
+      distinct: ["scenarioId"],
+      select: { scenarioId: true },
+    }),
+    getUserInfluenceProfile(session.user.id),
+  ])
+
+  const completedScenarioIds = attemptedRows.map((r) => r.scenarioId)
+
+  // Best score across all prior attempts on this scenario (for retake banner)
+  const bestPriorScore = priorAttempts.length > 0
+    ? Math.max(...priorAttempts.map((a) => a.scoreEarned))
+    : null
 
   return (
     <div className="min-h-screen bg-background">
@@ -85,9 +110,14 @@ export default async function ScenarioPage({
           moduleId={moduleId}
           moduleName={scenario.module.moduleTitle}
           priorAttemptCount={priorAttempts.length}
+          bestPriorScore={bestPriorScore}
           currentInfluenceScore={influenceProfile?.influenceScore ?? 0}
           currentInfluenceLevel={influenceProfile?.influenceLevel ?? "Reactive Parent"}
           hasEverScored={influenceProfile !== null}
+          scenarioIndex={scenarioIndex}
+          totalScenarios={totalScenarios}
+          allScenarioIds={allScenarioIds}
+          completedScenarioIds={completedScenarioIds}
         />
       </main>
     </div>

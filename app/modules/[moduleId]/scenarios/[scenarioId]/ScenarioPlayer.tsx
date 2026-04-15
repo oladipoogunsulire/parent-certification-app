@@ -48,9 +48,19 @@ interface Props {
   moduleId: string
   moduleName: string
   priorAttemptCount: number
+  /** Best scoreEarned across all prior attempts, or null if never attempted */
+  bestPriorScore: number | null
   currentInfluenceScore: number
   currentInfluenceLevel: string
   hasEverScored: boolean
+  /** 1-based position of this scenario in the module */
+  scenarioIndex: number
+  /** Total active scenarios in the module */
+  totalScenarios: number
+  /** Ordered list of all active scenario IDs in this module */
+  allScenarioIds: string[]
+  /** Scenario IDs the user has already attempted at least once (pre-load snapshot) */
+  completedScenarioIds: string[]
 }
 
 // ---------------------------------------------------------------------------
@@ -79,6 +89,68 @@ function levelStyle(level: string): { badge: string; text: string } {
 }
 
 // ---------------------------------------------------------------------------
+// Progress indicator sub-component
+// ---------------------------------------------------------------------------
+
+function ScenarioProgressIndicator({
+  scenarioIndex,
+  totalScenarios,
+  allScenarioIds,
+  completedScenarioIds,
+  currentScenarioId,
+}: {
+  scenarioIndex: number
+  totalScenarios: number
+  allScenarioIds: string[]
+  completedScenarioIds: string[]
+  currentScenarioId: string
+}) {
+  const completedSet = new Set(completedScenarioIds)
+  return (
+    <div className="flex flex-wrap items-center gap-3 mb-6">
+      {/* Dots row */}
+      <div className="flex items-center gap-1.5">
+        {allScenarioIds.map((id) => {
+          const isCurrent   = id === currentScenarioId
+          const isCompleted = completedSet.has(id) && !isCurrent
+
+          if (isCurrent) {
+            return (
+              <span
+                key={id}
+                title="Current scenario"
+                className="w-3 h-3 rounded-full bg-[#1E3A5F] ring-2 ring-[#1E3A5F]/30 ring-offset-1 inline-block flex-shrink-0"
+              />
+            )
+          }
+          if (isCompleted) {
+            return (
+              <span
+                key={id}
+                title="Completed"
+                className="w-3 h-3 rounded-full bg-[#F97316] inline-block flex-shrink-0"
+              />
+            )
+          }
+          return (
+            <span
+              key={id}
+              title="Not started"
+              className="w-3 h-3 rounded-full border-2 border-gray-300 bg-transparent inline-block flex-shrink-0"
+            />
+          )
+        })}
+      </div>
+
+      {/* Pill label */}
+      <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[#1E3A5F] text-white">
+        Scenario {scenarioIndex} of {totalScenarios}
+      </span>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
@@ -88,18 +160,28 @@ export default function ScenarioPlayer({
   moduleId,
   moduleName,
   priorAttemptCount,
+  bestPriorScore,
   currentInfluenceScore,
   currentInfluenceLevel,
   hasEverScored,
+  scenarioIndex,
+  totalScenarios,
+  allScenarioIds,
+  completedScenarioIds,
 }: Props) {
-  const [selectedId, setSelectedId]             = useState<string | null>(null)
-  const [submitting, setSubmitting]              = useState(false)
-  const [apiError, setApiError]                  = useState<string | null>(null)
-  const [result, setResult]                      = useState<AttemptResult | null>(null)
-  const [showBestResponse, setShowBestResponse]  = useState(false)
-  const [showBeltModal, setShowBeltModal]        = useState(false)
+  const [selectedId, setSelectedId]            = useState<string | null>(null)
+  const [submitting, setSubmitting]             = useState(false)
+  const [apiError, setApiError]                 = useState<string | null>(null)
+  const [result, setResult]                     = useState<AttemptResult | null>(null)
+  const [showBestResponse, setShowBestResponse] = useState(false)
+  const [showBeltModal, setShowBeltModal]       = useState(false)
 
-  const displayTitle = scenario.scenarioTitle ?? "Scenario"
+  // Track completed scenarios locally — updated after a successful submission
+  const [localCompletedIds, setLocalCompletedIds] = useState<Set<string>>(
+    new Set(completedScenarioIds)
+  )
+
+  const displayTitle  = scenario.scenarioTitle ?? "Scenario"
   const optimalResponse = responses.find((r) => r.isOptimal) ?? null
 
   // ── Submit handler ──────────────────────────────────────────────────────
@@ -119,6 +201,8 @@ export default function ScenarioPlayer({
         setApiError(data.error ?? "Something went wrong. Your response was not saved. Please try again.")
         return
       }
+      // Mark current scenario as completed in local state
+      setLocalCompletedIds((prev) => new Set([...prev, scenario.id]))
       setResult(data as AttemptResult)
       if (data.beltUpdate?.beltChanged && data.beltUpdate?.newBelt) {
         setShowBeltModal(true)
@@ -143,23 +227,49 @@ export default function ScenarioPlayer({
   // ────────────────────────────────────────────────────────────────────────
   if (result) {
     const { selectedResponse, influenceProfile } = result
-    const meta = scoreMeta(selectedResponse.scoreImpact)
-    const prevScore = currentInfluenceScore
-    const newScore  = influenceProfile.influenceScore
-    const newLevel  = influenceProfile.influenceLevel
-    const lvStyle   = levelStyle(newLevel)
+    const meta        = scoreMeta(selectedResponse.scoreImpact)
+    const prevScore   = currentInfluenceScore
+    const newScore    = influenceProfile.influenceScore
+    const newLevel    = influenceProfile.influenceLevel
+    const lvStyle     = levelStyle(newLevel)
     const isFirstEver = !hasEverScored
+
+    // Smart CTA logic
+    // After submission localCompletedIds includes the current scenario.
+    // "Remaining" = scenarios not yet attempted that aren't the current one.
+    const remainingIds = allScenarioIds.filter(
+      (id) => id !== scenario.id && !localCompletedIds.has(id)
+    )
+    const nextScenarioId = remainingIds[0] ?? null
+
+    // Was the module already fully completed BEFORE this attempt?
+    // i.e. all scenarios were in completedScenarioIds (the pre-load snapshot)
+    const wasAlreadyAllComplete =
+      allScenarioIds.every((id) => completedScenarioIds.includes(id))
+    const isRetakeOfCompleted = result.isRetake && wasAlreadyAllComplete
+
+    // Is the module NOW fully complete (after this attempt)?
+    const isNowAllComplete = allScenarioIds.every((id) => localCompletedIds.has(id))
 
     return (
       <div>
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-sm text-foreground/50 mb-6 flex-wrap">
+        <nav className="flex items-center gap-2 text-sm text-foreground/50 mb-4 flex-wrap">
           <a href="/modules" className="hover:text-foreground transition-colors">Modules</a>
           <span>/</span>
           <a href={`/modules/${moduleId}`} className="hover:text-foreground transition-colors">{moduleName}</a>
           <span>/</span>
           <span className="text-foreground">Results</span>
         </nav>
+
+        {/* Progress indicator */}
+        <ScenarioProgressIndicator
+          scenarioIndex={scenarioIndex}
+          totalScenarios={totalScenarios}
+          allScenarioIds={allScenarioIds}
+          completedScenarioIds={[...localCompletedIds]}
+          currentScenarioId={scenario.id}
+        />
 
         {/* Condensed narrative */}
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 mb-6">
@@ -283,20 +393,83 @@ export default function ScenarioPlayer({
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <button
-            onClick={handleRetake}
-            className="flex-1 sm:flex-none min-h-[44px] border border-[#1E3A5F] text-[#1E3A5F] px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#1E3A5F]/5 transition-colors"
-          >
-            Try again
-          </button>
-          <a
-            href={`/modules/${moduleId}`}
-            className="flex-1 sm:flex-none min-h-[44px] flex items-center justify-center bg-[#1E3A5F] text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#162d4a] transition-colors"
-          >
-            Back to module
-          </a>
+        {/* ── Smart CTA ──────────────────────────────────────────────────── */}
+        <div className="flex flex-col gap-3">
+          {isRetakeOfCompleted ? (
+            /* Case C — retake of already-complete module */
+            <a
+              href={`/modules/${moduleId}`}
+              className="min-h-[44px] flex items-center justify-center bg-[#1E3A5F] text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#162d4a] transition-colors"
+            >
+              Back to module
+            </a>
+          ) : isNowAllComplete ? (
+            /* Case B — just completed the last scenario */
+            <div className="flex flex-col items-stretch gap-2">
+              <a
+                href="/modules"
+                className="min-h-[44px] flex items-center justify-center bg-[#1E3A5F] text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#162d4a] transition-colors"
+              >
+                Module Complete! Back to Modules →
+              </a>
+              <p className="text-center text-xs text-green-600 font-medium">
+                All scenarios completed — great work!
+              </p>
+            </div>
+          ) : nextScenarioId ? (
+            /* Case A — remaining scenarios */
+            <div className="flex flex-col items-stretch gap-2">
+              <p className="text-xs text-foreground/50 text-center">
+                You have {remainingIds.length} scenario{remainingIds.length !== 1 ? "s" : ""} remaining in this module
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <a
+                  href={`/modules/${moduleId}/scenarios/${nextScenarioId}`}
+                  className="flex-1 min-h-[44px] flex items-center justify-center bg-[#F97316] text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#e06810] transition-colors"
+                >
+                  Next Scenario →
+                </a>
+                <button
+                  onClick={handleRetake}
+                  className="flex-shrink-0 min-h-[44px] border border-[#1E3A5F] text-[#1E3A5F] px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#1E3A5F]/5 transition-colors"
+                >
+                  Try again
+                </button>
+              </div>
+              <a
+                href={`/modules/${moduleId}`}
+                className="text-center text-sm text-foreground/40 hover:text-foreground/70 transition-colors"
+              >
+                Back to module
+              </a>
+            </div>
+          ) : (
+            /* Fallback — shouldn't normally reach here */
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={handleRetake}
+                className="flex-1 sm:flex-none min-h-[44px] border border-[#1E3A5F] text-[#1E3A5F] px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#1E3A5F]/5 transition-colors"
+              >
+                Try again
+              </button>
+              <a
+                href={`/modules/${moduleId}`}
+                className="flex-1 sm:flex-none min-h-[44px] flex items-center justify-center bg-[#1E3A5F] text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#162d4a] transition-colors"
+              >
+                Back to module
+              </a>
+            </div>
+          )}
+
+          {/* Try again always available for non-retake cases */}
+          {!isRetakeOfCompleted && !nextScenarioId && !isNowAllComplete && (
+            <button
+              onClick={handleRetake}
+              className="min-h-[44px] border border-[#1E3A5F] text-[#1E3A5F] px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#1E3A5F]/5 transition-colors"
+            >
+              Try again
+            </button>
+          )}
         </div>
 
         <style>{`
@@ -323,7 +496,7 @@ export default function ScenarioPlayer({
   return (
     <div>
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-sm text-foreground/50 mb-6 flex-wrap">
+      <nav className="flex items-center gap-2 text-sm text-foreground/50 mb-4 flex-wrap">
         <a href="/modules" className="hover:text-foreground transition-colors">Modules</a>
         <span>/</span>
         <a href={`/modules/${moduleId}`} className="hover:text-foreground transition-colors">{moduleName}</a>
@@ -333,10 +506,23 @@ export default function ScenarioPlayer({
         <span className="text-foreground">{displayTitle}</span>
       </nav>
 
-      {/* Retake banner */}
+      {/* Progress indicator */}
+      <ScenarioProgressIndicator
+        scenarioIndex={scenarioIndex}
+        totalScenarios={totalScenarios}
+        allScenarioIds={allScenarioIds}
+        completedScenarioIds={completedScenarioIds}
+        currentScenarioId={scenario.id}
+      />
+
+      {/* Retake banner — updated with attempt count and best score */}
       {priorAttemptCount > 0 && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 mb-5 text-sm text-amber-800">
-          You&apos;ve attempted this scenario before. Your Influence Score will update with this attempt.
+          You&apos;ve attempted this scenario {priorAttemptCount} time{priorAttemptCount !== 1 ? "s" : ""}.
+          {bestPriorScore !== null && (
+            <> Your best score was <span className="font-semibold">{bestPriorScore}</span>.</>
+          )}{" "}
+          Your Influence Score will update with this attempt.
         </div>
       )}
 

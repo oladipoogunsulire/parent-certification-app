@@ -275,6 +275,20 @@ export default async function ModuleDetailPage({
               </p>
             )}
 
+            {/* Scenario completion summary — shown when unlocked */}
+            {allLessonsComplete && (() => {
+              const totalScenarios     = mod.scenarios.length
+              const completedScenarios = mod.scenarios.filter((s) => (scenarioAttemptMap.get(s.id)?.count ?? 0) > 0).length
+              const allScenariosComplete = completedScenarios === totalScenarios
+              return (
+                <p className={`text-sm mb-3 ${allScenariosComplete ? "text-green-600 font-medium" : "text-foreground/50"}`}>
+                  {allScenariosComplete
+                    ? "All scenarios completed ✓"
+                    : `${completedScenarios} of ${totalScenarios} scenario${totalScenarios !== 1 ? "s" : ""} completed`}
+                </p>
+              )
+            })()}
+
             <div className="space-y-3 mt-4">
               {mod.scenarios.map((scenario, index) => {
                 const attemptData = scenarioAttemptMap.get(scenario.id)
@@ -316,6 +330,16 @@ export default async function ModuleDetailPage({
                           {index + 1}.{" "}
                           {scenario.scenarioTitle ?? `Scenario ${index + 1}`}
                         </p>
+                        {/* Completion status badge — only when unlocked */}
+                        {allLessonsComplete && (
+                          <span className={`inline-flex items-center gap-1 text-xs font-medium px-1.5 py-0.5 rounded-full ${
+                            attemptCount > 0
+                              ? "bg-green-100 text-green-700"
+                              : "bg-gray-100 text-gray-500"
+                          }`}>
+                            {attemptCount > 0 ? "✅ Completed" : "⭕ Not started"}
+                          </span>
+                        )}
                         {/* Last score badge — only when unlocked and attempted */}
                         {allLessonsComplete && lastScore !== null && scoreLabel && (
                           <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full ${scoreBadgeColor}`}>
@@ -330,12 +354,10 @@ export default async function ModuleDetailPage({
                       >
                         Complexity {scenario.complexityLevel} · {scenario.xpValue} XP
                         {scenario.isRequired ? " · Required" : ""}
-                        {allLessonsComplete && (
+                        {allLessonsComplete && attemptCount > 0 && (
                           <>
                             {" · "}
-                            {attemptCount === 0
-                              ? "Not attempted"
-                              : `Attempted ${attemptCount} time${attemptCount !== 1 ? "s" : ""}`}
+                            {`Attempted ${attemptCount} time${attemptCount !== 1 ? "s" : ""}`}
                           </>
                         )}
                       </p>
