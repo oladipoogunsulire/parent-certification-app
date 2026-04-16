@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { notFound, redirect } from "next/navigation"
 import LessonCompleteButton from "./LessonCompleteButton"
 import VideoPlayer from "@/app/components/VideoPlayer"
+import DownloadButton from "./DownloadButton"
 
 export default async function LessonPage({
   params,
@@ -29,6 +30,9 @@ export default async function LessonPage({
           },
         },
       },
+      resources: {
+        orderBy: { uploadedAt: "asc" },
+      },
     },
   })
 
@@ -46,6 +50,7 @@ export default async function LessonPage({
   const isFirstModule = firstModule?.id === moduleId
   const isFree = lesson.module.isFreePreview || isFirstModule
 
+  let hasActiveSubscription = isFree // free lessons always count as "has access"
   if (!isFree) {
     const sub = await prisma.userSubscription.findFirst({
       where: { userId: session.user.id, status: "ACTIVE" },
@@ -53,6 +58,7 @@ export default async function LessonPage({
     if (!sub) {
       redirect("/subscribe")
     }
+    hasActiveSubscription = true
   }
 
   // Record visit and retrieve completed state
@@ -188,6 +194,37 @@ export default async function LessonPage({
               Reflection
             </h2>
             <p className="text-blue-900">{lesson.reflectionPrompt}</p>
+          </div>
+        )}
+
+        {/* Downloads section */}
+        {lesson.resources.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-xs font-semibold text-foreground/50 uppercase tracking-widest mb-3">
+              Downloads
+            </h2>
+            {hasActiveSubscription ? (
+              <div className="space-y-2">
+                {lesson.resources.map((resource) => (
+                  <DownloadButton
+                    key={resource.id}
+                    lessonId={lessonId}
+                    resourceId={resource.id}
+                    fileName={resource.fileName}
+                    fileSize={resource.fileSize}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="p-4 rounded-lg border border-gray-200 bg-gray-50 text-sm text-gray-500 flex items-center gap-2">
+                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                <span>
+                  <a href="/subscribe" className="font-medium text-accent hover:underline">Subscribe</a> to access downloadable resources
+                </span>
+              </div>
+            )}
           </div>
         )}
 

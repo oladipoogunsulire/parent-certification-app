@@ -4,6 +4,14 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { getEmbedUrl } from "@/lib/video"
 
+interface ResourceItem {
+  id: string
+  fileName: string
+  fileSize: number
+  mimeType: string
+  uploadedAt: string
+}
+
 interface Props {
   trackId: string
   moduleId: string
@@ -17,13 +25,66 @@ interface Props {
     estimatedDurationMinutes: number
     xpValue: number
   }
+  initialResources: ResourceItem[]
 }
 
-export default function EditLessonForm({ trackId, moduleId, lessonId, initial }: Props) {
+export default function EditLessonForm({ trackId, moduleId, lessonId, initial, initialResources }: Props) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [form, setForm] = useState(initial)
+
+  // Resources state
+  const [resources, setResources] = useState<ResourceItem[]>(initialResources)
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState("")
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    setUploadError("")
+    const formData = new FormData()
+    formData.append("file", file)
+    try {
+      const res = await fetch(`/api/admin/lessons/${lessonId}/resources`, {
+        method: "POST",
+        body: formData,
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setUploadError(data.error || "Upload failed")
+      } else {
+        setResources((prev) => [...prev, { ...data, uploadedAt: data.uploadedAt ?? new Date().toISOString() }])
+      }
+    } catch {
+      setUploadError("Upload failed")
+    } finally {
+      setUploading(false)
+      e.target.value = ""
+    }
+  }
+
+  const handleDeleteResource = async (resourceId: string) => {
+    setDeletingId(resourceId)
+    try {
+      const res = await fetch(`/api/admin/lessons/${lessonId}/resources/${resourceId}`, {
+        method: "DELETE",
+      })
+      if (res.ok) {
+        setResources((prev) => prev.filter((r) => r.id !== resourceId))
+      }
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
+  function formatBytes(bytes: number) {
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -205,6 +266,62 @@ export default function EditLessonForm({ trackId, moduleId, lessonId, initial }:
           </a>
         </div>
       </form>
+
+      {/* ── Resources section ──────────────────────────────────── */}
+      <div className="mt-8 bg-white rounded-lg border border-gray-200 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-base font-semibold text-gray-900">Downloadable resources</h3>
+            <p className="text-xs text-gray-500 mt-0.5">
+              {resources.length}/5 resources · PDF, PNG, JPG, GIF, DOCX · max 10 MB each
+            </p>
+          </div>
+          {resources.length < 5 && (
+            <label className="cursor-pointer">
+              <span className="bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors">
+                {uploading ? "Uploading…" : "Upload file"}
+              </span>
+              <input
+                type="file"
+                className="sr-only"
+                accept=".pdf,.png,.jpg,.jpeg,.gif,.docx"
+                onChange={handleFileUpload}
+                disabled={uploading}
+              />
+            </label>
+          )}
+        </div>
+
+        {uploadError && (
+          <p className="text-red-600 text-sm mb-3">{uploadError}</p>
+        )}
+
+        {resources.length === 0 ? (
+          <p className="text-sm text-gray-400 text-center py-4">No resources yet</p>
+        ) : (
+          <ul className="space-y-2">
+            {resources.map((r) => (
+              <li
+                key={r.id}
+                className="flex items-center justify-between p-3 bg-gray-50 rounded-md border border-gray-100"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-gray-800 truncate">{r.fileName}</p>
+                  <p className="text-xs text-gray-400">{formatBytes(r.fileSize)}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteResource(r.id)}
+                  disabled={deletingId === r.id}
+                  className="ml-4 flex-shrink-0 text-xs text-red-600 hover:text-red-800 disabled:opacity-50"
+                >
+                  {deletingId === r.id ? "Deleting…" : "Delete"}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   )
 }

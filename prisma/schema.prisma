@@ -266,8 +266,23 @@ model Lesson {
   module        Module               @relation(fields: [moduleId], references: [id])
   xpTransactions XPTransaction[]
   userProgress  UserLessonProgress[]
+  resources     LessonResource[]
 
   @@map("lessons")
+}
+
+model LessonResource {
+  id          String   @id @default(cuid())
+  lessonId    String
+  fileName    String
+  fileKey     String   // R2 object key
+  fileSize    Int      // bytes
+  mimeType    String
+  uploadedAt  DateTime @default(now())
+
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@map("lesson_resources")
 }
 
 model UserLessonProgress {

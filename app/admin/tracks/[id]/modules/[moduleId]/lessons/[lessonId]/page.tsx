@@ -11,6 +11,11 @@ export default async function EditLessonPage({
 
   const lesson = await prisma.lesson.findUnique({
     where: { id: lessonId },
+    include: {
+      resources: {
+        orderBy: { uploadedAt: "asc" },
+      },
+    },
   })
 
   if (!lesson || lesson.moduleId !== moduleId) notFound()
@@ -29,6 +34,13 @@ export default async function EditLessonPage({
         estimatedDurationMinutes: lesson.estimatedDurationMinutes ?? 10,
         xpValue: lesson.xpValue,
       }}
+      initialResources={lesson.resources.map((r) => ({
+        id: r.id,
+        fileName: r.fileName,
+        fileSize: r.fileSize,
+        mimeType: r.mimeType,
+        uploadedAt: r.uploadedAt.toISOString(),
+      }))}
     />
   )
 }
