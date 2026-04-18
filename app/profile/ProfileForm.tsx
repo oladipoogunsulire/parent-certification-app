@@ -3,12 +3,76 @@
 import { useState } from "react"
 import { updateProfile } from "@/app/actions/update-profile"
 
+// ---------------------------------------------------------------------------
+// PDF Download helper — reusable in certification section
+// ---------------------------------------------------------------------------
+function DownloadPDFButton({ userId }: { userId: string }) {
+  const [downloading, setDownloading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleDownload() {
+    setDownloading(true)
+    setError(null)
+    try {
+      const res = await fetch(`/api/certificate/${userId}/download`)
+      if (!res.ok) throw new Error("Failed to generate PDF")
+      const blob = await res.blob()
+      const url  = URL.createObjectURL(blob)
+      const a    = document.createElement("a")
+      a.href     = url
+      a.download = "ultimate-influencer-certificate.pdf"
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } catch {
+      setError("Download failed. Please try again.")
+    } finally {
+      setDownloading(false)
+    }
+  }
+
+  return (
+    <div>
+      <button
+        onClick={handleDownload}
+        disabled={downloading}
+        className="inline-flex items-center gap-1.5 min-h-[36px] px-4 py-1.5 text-sm border border-[#1E3A5F] text-[#1E3A5F] rounded-lg hover:bg-[#1E3A5F]/5 disabled:opacity-50 transition-colors"
+      >
+        {downloading ? (
+          <>
+            <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+            </svg>
+            Generating…
+          </>
+        ) : (
+          <>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            Download PDF
+          </>
+        )}
+      </button>
+      {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
+    </div>
+  )
+}
+
 interface InfluenceProfile {
   hasStarted: boolean
   influenceScore: number
   influenceLevel: string
   totalAttempts: number
   scenariosCompleted: number
+}
+
+interface CertificateData {
+  certificateCode: string
+  issuedAt:        string  // ISO string
+  score:           number
 }
 
 interface Props {
@@ -26,6 +90,8 @@ interface Props {
   }
   hasSecurityQuestions: boolean
   influenceProfile: InfluenceProfile
+  certificate?: CertificateData | null
+  userId?: string
 }
 
 const INFLUENCE_LEVELS = [
@@ -71,7 +137,7 @@ function headerBadgeClass(level: string): string {
   }
 }
 
-export default function ProfileForm({ user, stats, hasSecurityQuestions, influenceProfile }: Props) {
+export default function ProfileForm({ user, stats, hasSecurityQuestions, influenceProfile, certificate, userId }: Props) {
   const [firstName, setFirstName] = useState(user.firstName)
   const [lastName, setLastName]   = useState(user.lastName)
   const [loading, setLoading]     = useState(false)
@@ -304,6 +370,47 @@ export default function ProfileForm({ user, stats, hasSecurityQuestions, influen
             </a>
           </div>
         </div>
+
+        {/* ── Black Belt Certification ─────────────────────────────────── */}
+        {certificate && userId && (
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+            <h2 className="text-lg font-bold text-primary mb-5">Certification</h2>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              {/* Badge */}
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="w-14 h-14 rounded-xl bg-[#1E3A5F] flex items-center justify-center flex-shrink-0">
+                  <span className="text-2xl" aria-hidden>🥋</span>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-[#1E3A5F]">Certified Ultimate Influencer™</p>
+                  <p className="text-xs text-foreground/50 mt-0.5">
+                    Certified on{" "}
+                    {new Date(certificate.issuedAt).toLocaleDateString("en-US", {
+                      month: "long", day: "numeric", year: "numeric",
+                    })}
+                  </p>
+                  <p className="text-xs text-foreground/50">
+                    Achieved with a score of <span className="font-semibold text-[#1E3A5F]">{Math.round(certificate.score)}%</span>
+                  </p>
+                  <p className="font-mono text-xs text-foreground/40 mt-0.5 truncate">
+                    #{certificate.certificateCode.slice(0, 12).toUpperCase()}
+                  </p>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex flex-col sm:flex-row gap-2 flex-shrink-0">
+                <a
+                  href={`/certificate/${userId}`}
+                  className="inline-flex items-center justify-center min-h-[36px] px-4 py-1.5 text-sm bg-[#1E3A5F] text-white rounded-lg hover:bg-[#162d4a] transition-colors"
+                >
+                  View Certificate
+                </a>
+                <DownloadPDFButton userId={userId} />
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ── Influence Journey ────────────────────────────────────────── */}
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">

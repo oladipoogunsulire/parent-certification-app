@@ -21,6 +21,7 @@
     "@aws-sdk/s3-request-presigner": "^3.1030.0",
     "@prisma/adapter-neon": "^7.6.0",
     "@prisma/client": "^7.6.0",
+    "@react-pdf/renderer": "^4.5.1",
     "@stripe/stripe-js": "^9.0.1",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.3.1",

@@ -67,6 +67,12 @@ export default async function ProfilePage() {
   const accountStatus =
     user.subscriptions.length > 0 ? "Premium" : "Free"
 
+  // Fetch Black Belt certificate if present
+  const examCertificate = await prisma.examCertificate.findUnique({
+    where: { userId: user.id },
+    select: { certificateCode: true, issuedAt: true, score: true },
+  })
+
   // Influence Score™ profile + distinct scenarios attempted
   const [rawInfluenceProfile, scenarioRows] = await Promise.all([
     getUserInfluenceProfile(user.id).catch(() => null),
@@ -113,6 +119,16 @@ export default async function ProfilePage() {
         }}
         hasSecurityQuestions={!!user.securityQuestion}
         influenceProfile={influenceProfile}
+        certificate={
+          examCertificate
+            ? {
+                certificateCode: examCertificate.certificateCode,
+                issuedAt:        examCertificate.issuedAt.toISOString(),
+                score:           examCertificate.score,
+              }
+            : null
+        }
+        userId={user.id}
       />
     </>
   )

@@ -4,6 +4,42 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 
 // ---------------------------------------------------------------------------
+// PDF download helper (owner-only)
+// ---------------------------------------------------------------------------
+function DownloadCertPDFButton({ userId }: { userId: string }) {
+  const [downloading, setDownloading] = useState(false)
+
+  async function handleDownload() {
+    setDownloading(true)
+    try {
+      const res  = await fetch(`/api/certificate/${userId}/download`)
+      if (!res.ok) return
+      const blob = await res.blob()
+      const url  = URL.createObjectURL(blob)
+      const a    = document.createElement("a")
+      a.href     = url
+      a.download = "ultimate-influencer-certificate.pdf"
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } finally {
+      setDownloading(false)
+    }
+  }
+
+  return (
+    <button
+      onClick={handleDownload}
+      disabled={downloading}
+      className="flex-shrink-0 bg-white/10 hover:bg-white/20 disabled:opacity-50 text-white font-semibold text-xs px-3 py-2 rounded-lg transition-colors min-h-[36px] flex items-center gap-1"
+    >
+      {downloading ? "Generating…" : "Download PDF"}
+    </button>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
@@ -262,12 +298,15 @@ export default function ExamLandingClient({
               <p className="text-white/60 text-xs">The Ultimate Influencer™</p>
             </div>
           </div>
-          <a
-            href={`/certificate/${userId}`}
-            className="flex-shrink-0 bg-yellow-400 hover:bg-yellow-300 text-[#1E3A5F] font-bold text-xs px-4 py-2 rounded-lg transition-colors min-h-[36px] flex items-center"
-          >
-            View Certificate
-          </a>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <a
+              href={`/certificate/${userId}`}
+              className="bg-yellow-400 hover:bg-yellow-300 text-[#1E3A5F] font-bold text-xs px-4 py-2 rounded-lg transition-colors min-h-[36px] flex items-center"
+            >
+              View Certificate
+            </a>
+            <DownloadCertPDFButton userId={userId} />
+          </div>
         </div>
       )}
 
