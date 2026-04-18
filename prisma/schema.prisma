@@ -35,7 +35,7 @@ model User {
   profile              UserProfile?
   subscriptions        UserSubscription[]
   certifications       Certification[]
-  examAttempts         ExamAttempt[]
+  beltExamAttempts     BeltExamAttempt[]
   xpTransactions       XPTransaction[]
   userBadges           UserBadge[]
   ceRecords            CERecord[]
@@ -49,6 +49,8 @@ model User {
   resetTokens          PasswordResetToken[]
   scenarioAttempts     UserScenarioAttempt[]
   influenceProfile     UserInfluenceProfile?
+  examAttempts         ExamAttempt[]
+  examCertificate      ExamCertificate?
 
   @@map("users")
 }
@@ -211,12 +213,12 @@ model Belt {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  track          Track           @relation(fields: [trackId], references: [id])
-  modules        Module[]
-  certifications Certification[]
-  examAttempts   ExamAttempt[]
-  questions      Question[]
-  scenarios      Scenario[]
+  track             Track             @relation(fields: [trackId], references: [id])
+  modules           Module[]
+  certifications    Certification[]
+  beltExamAttempts  BeltExamAttempt[]
+  questions         Question[]
+  scenarios         Scenario[]
 
   @@unique([trackId, beltLevel])
   @@map("belts")
@@ -428,7 +430,7 @@ model CertificationEvent {
   @@map("certification_events")
 }
 
-model ExamAttempt {
+model BeltExamAttempt {
   id              String   @id @default(uuid())
   userId          String
   trackId         String
@@ -442,7 +444,7 @@ model ExamAttempt {
   user User @relation(fields: [userId], references: [id])
   belt Belt @relation(fields: [beltId], references: [id])
 
-  @@map("exam_attempts")
+  @@map("belt_exam_attempts")
 }
 
 // ==============================
@@ -655,4 +657,107 @@ model UserInfluenceProfile {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_influence_profiles")
+}
+
+// ==============================
+// BLACK BELT EXAM ENGINE
+// ==============================
+
+enum ExamDifficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+model ExamConfiguration {
+  id                   String   @id @default(cuid())
+  isEnabled            Boolean  @default(false)
+  passingThreshold     Float    @default(90)      // percentage e.g. 90 = 90%
+  totalQuestions       Int      @default(40)      // questions per attempt
+  isTimed              Boolean  @default(true)
+  timeLimitMinutes     Int      @default(45)
+  easyPercent          Int      @default(40)      // % of easy questions
+  mediumPercent        Int      @default(40)      // % of medium questions
+  hardPercent          Int      @default(20)      // % of hard questions
+  randomiseQuestions   Boolean  @default(true)
+  randomiseOptions     Boolean  @default(true)
+  certificateSignatory String   @default("Dr. Tilis")
+  updatedAt            DateTime @updatedAt
+
+  @@map("exam_configuration")
+}
+
+model ExamQuestion {
+  id           String         @id @default(cuid())
+  questionText String         // the question
+  difficulty   ExamDifficulty @default(MEDIUM)
+  moduleTag    String?        // optional — which module this question relates to
+  isActive     Boolean        @default(true)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  options  ExamQuestionOption[]
+  attempts ExamAttemptAnswer[]
+
+  @@map("exam_questions")
+}
+
+model ExamQuestionOption {
+  id           String   @id @default(cuid())
+  questionId   String
+  optionText   String
+  isCorrect    Boolean  @default(false)
+  explanation  String?  // shown after answering — why this is right or wrong
+  displayOrder Int      @default(0)
+
+  question ExamQuestion        @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  attempts ExamAttemptAnswer[]
+
+  @@map("exam_question_options")
+}
+
+model ExamAttempt {
+  id               String    @id @default(cuid())
+  userId           String
+  startedAt        DateTime  @default(now())
+  completedAt      DateTime?
+  score            Float?    // percentage score e.g. 87.5
+  passed           Boolean?  // true if score >= passingThreshold
+  attemptNumber    Int       @default(1)
+  timeTakenSeconds Int?      // how long the user took
+
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers     ExamAttemptAnswer[]
+  certificate ExamCertificate?
+
+  @@map("exam_attempts")
+}
+
+model ExamAttemptAnswer {
+  id               String   @id @default(cuid())
+  attemptId        String
+  questionId       String
+  selectedOptionId String
+  isCorrect        Boolean
+  answeredAt       DateTime @default(now())
+
+  attempt        ExamAttempt        @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question       ExamQuestion       @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  selectedOption ExamQuestionOption @relation(fields: [selectedOptionId], references: [id], onDelete: Cascade)
+
+  @@map("exam_attempt_answers")
+}
+
+model ExamCertificate {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  attemptId         String   @unique
+  certificateCode   String   @unique @default(cuid()) // unique verification code
+  issuedAt          DateTime @default(now())
+  score             Float    // score at time of passing
+
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  attempt ExamAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  @@map("exam_certificates")
 }

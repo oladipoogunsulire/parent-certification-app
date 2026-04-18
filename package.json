@@ -11,7 +11,8 @@
     "seed:admin": "tsx prisma/seed-admin.ts",
     "promote:admin": "tsx prisma/promote-admin.ts",
     "reset:password": "tsx scripts/reset-user-password.ts",
-    "reset:influence-data": "tsx scripts/reset-influence-data.ts"
+    "reset:influence-data": "tsx scripts/reset-influence-data.ts",
+    "seed:exam-config": "tsx scripts/seed-exam-config.ts"
   },
   "dependencies": {
     "@auth/core": "0.41.1",

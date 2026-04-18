@@ -18,6 +18,22 @@ Belt thresholds (modules completed → belt):
 Belt is stored on the User model as `currentBelt` (String?) and `beltEarnedAt` (DateTime?).
 Belt check runs after every lesson completion and every scenario attempt via `checkAndAwardBelt()` in `lib/module-completion.ts`.
 
+## Black Belt Exam
+
+The Black Belt exam is the single final certification exam. It is only accessible to users who have earned a Brown Belt (completed 9 modules). Controlled by BLACK_BELT_EXAM_ENABLED in lib/feature-flags.ts.
+
+Exam is fully admin-configurable via ExamConfiguration model (one row). Default settings:
+- Passing threshold: 90%
+- Total questions: 40
+- Timed: yes, 45 minutes
+- Difficulty composition: 40% Easy / 40% Medium / 20% Hard
+- Randomise questions: yes
+- Randomise options: yes
+- Certificate signatory: Dr. Tilis
+
+Question difficulty: EASY / MEDIUM / HARD (ExamDifficulty enum)
+Certificate verification code stored on ExamCertificate.certificateCode
+
 ## Influence Score™ System
 
 Scoring model: 3 (Weak) / 5 (Neutral) / 7 (Good) / 10 (Best)

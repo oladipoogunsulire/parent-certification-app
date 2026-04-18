@@ -112,7 +112,7 @@ export async function DELETE(
       where: { certificationId: { in: certIds } },
     })
     await prisma.certification.deleteMany({ where: { trackId } })
-    await prisma.examAttempt.deleteMany({ where: { trackId } })
+    await prisma.beltExamAttempt.deleteMany({ where: { trackId } })
     await prisma.cERecord.deleteMany({ where: { trackId } })
     await prisma.belt.deleteMany({ where: { trackId } })
     await prisma.track.delete({ where: { id: trackId } })

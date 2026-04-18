@@ -89,11 +89,11 @@ export async function POST(
     const passed = scorePercentage >= belt.passingThreshold
 
     // Count previous attempts for attempt number
-    const prevAttempts = await prisma.examAttempt.count({
+    const prevAttempts = await prisma.beltExamAttempt.count({
       where: { userId: session.user.id, beltId },
     })
 
-    await prisma.examAttempt.create({
+    await prisma.beltExamAttempt.create({
       data: {
         userId: session.user.id,
         trackId,

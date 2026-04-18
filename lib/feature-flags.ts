@@ -4,7 +4,7 @@
 /** When false: exam entry points are hidden from the user-facing UI */
 export const EXAMS_ENABLED = false
 
-/** Will be enabled when the Black Belt final exam is built */
+// Black Belt exam — set to true when exam is ready for users
 export const BLACK_BELT_EXAM_ENABLED = false
 
 /**
