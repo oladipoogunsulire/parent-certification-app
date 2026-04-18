@@ -34,6 +34,14 @@ Exam is fully admin-configurable via ExamConfiguration model (one row). Default 
 Question difficulty: EASY / MEDIUM / HARD (ExamDifficulty enum)
 Certificate verification code stored on ExamCertificate.certificateCode
 
+Exam engine: lib/exam-engine.ts
+API routes: /api/exam/*
+Question selection: fresh random selection per attempt based on difficulty composition
+Answers stored: ExamAttemptAnswer (one per question per attempt)
+Score: (correct / total) * 100
+Certificate: issued on first pass, updated on subsequent passes
+Security: isCorrect never exposed to client before answer submission
+
 ## Influence Score™ System
 
 Scoring model: 3 (Weak) / 5 (Neutral) / 7 (Good) / 10 (Best)
