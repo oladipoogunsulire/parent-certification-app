@@ -133,9 +133,15 @@ export async function checkAndAwardBelt(userId: string): Promise<{
   newBelt: string | null
   previousBelt: string | null
   beltChanged: boolean
+  allModulesComplete: boolean
 }> {
-  const count  = await getCompletedModuleCount(userId)
-  const newBelt = getBeltForModuleCount(count)
+  const count           = await getCompletedModuleCount(userId)
+  const allModulesComplete = count >= 10
+
+  // earnedBelt is the highest belt earned via modules alone.
+  // null is returned for count 0 (no belt yet) and count >= 10 (Black Belt
+  // requires the final exam — handled separately in exam-engine.ts).
+  const earnedBelt = getBeltForModuleCount(count)
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -143,16 +149,18 @@ export async function checkAndAwardBelt(userId: string): Promise<{
   })
   const previousBelt = user?.currentBelt ?? null
 
-  if (newBelt !== previousBelt) {
+  // Only upgrade — never downgrade.
+  // Black Belt ("Black Belt" string) is set by completeExamAttempt; never here.
+  if (earnedBelt !== null && earnedBelt !== previousBelt) {
     await prisma.user.update({
       where: { id: userId },
       data: {
-        currentBelt:  newBelt,
-        beltEarnedAt: newBelt ? new Date() : null,
+        currentBelt:  earnedBelt,
+        beltEarnedAt: new Date(),
       },
     })
-    return { newBelt, previousBelt, beltChanged: true }
+    return { newBelt: earnedBelt, previousBelt, beltChanged: true, allModulesComplete }
   }
 
-  return { newBelt, previousBelt, beltChanged: false }
+  return { newBelt: previousBelt, previousBelt, beltChanged: false, allModulesComplete }
 }

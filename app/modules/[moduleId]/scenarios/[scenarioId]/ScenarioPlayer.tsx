@@ -28,6 +28,7 @@ interface BeltUpdate {
   beltChanged: boolean
   newBelt: string | null
   previousBelt: string | null
+  allModulesComplete?: boolean
 }
 
 interface AttemptResult {
@@ -175,6 +176,7 @@ export default function ScenarioPlayer({
   const [result, setResult]                     = useState<AttemptResult | null>(null)
   const [showBestResponse, setShowBestResponse] = useState(false)
   const [showBeltModal, setShowBeltModal]       = useState(false)
+  const [showModuleComplete, setShowModuleComplete] = useState(false)
 
   // Track completed scenarios locally — updated after a successful submission
   const [localCompletedIds, setLocalCompletedIds] = useState<Set<string>>(
@@ -206,6 +208,8 @@ export default function ScenarioPlayer({
       setResult(data as AttemptResult)
       if (data.beltUpdate?.beltChanged && data.beltUpdate?.newBelt) {
         setShowBeltModal(true)
+      } else if (data.beltUpdate?.allModulesComplete) {
+        setShowModuleComplete(true)
       }
     } catch {
       setApiError("Something went wrong. Your response was not saved. Please try again.")
@@ -482,8 +486,17 @@ export default function ScenarioPlayer({
         {/* Belt award modal — fixed overlay, renders on top of results */}
         {showBeltModal && result.beltUpdate?.newBelt && (
           <BeltAwardModal
+            mode="belt-earned"
             beltName={result.beltUpdate.newBelt}
             onClose={() => setShowBeltModal(false)}
+          />
+        )}
+
+        {/* All-modules-complete modal */}
+        {showModuleComplete && (
+          <BeltAwardModal
+            mode="module-complete"
+            onClose={() => setShowModuleComplete(false)}
           />
         )}
       </div>

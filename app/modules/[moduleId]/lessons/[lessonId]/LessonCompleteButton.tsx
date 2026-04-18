@@ -23,6 +23,7 @@ export default function LessonCompleteButton({
   const [completed, setCompleted]   = useState(initialCompleted)
   const [isPending, startTransition] = useTransition()
   const [beltModal, setBeltModal]   = useState<string | null>(null)
+  const [showModuleComplete, setShowModuleComplete] = useState(false)
 
   const navigateTo = nextLessonHref ?? moduleHref
 
@@ -31,9 +32,12 @@ export default function LessonCompleteButton({
       const result = await updateLessonProgress(lessonId, true)
       setCompleted(true)
 
-      // If a new belt was earned, show the celebratory modal before navigating
       if (result?.beltUpdate?.beltChanged && result.beltUpdate.newBelt) {
+        // Belt upgrade — show belt-earned modal
         setBeltModal(result.beltUpdate.newBelt)
+      } else if (result?.beltUpdate?.allModulesComplete) {
+        // All 10 modules done — show exam unlock modal
+        setShowModuleComplete(true)
       } else {
         // Short delay so the "✅ Completed" flash is visible before navigating
         setTimeout(() => {
@@ -45,8 +49,21 @@ export default function LessonCompleteButton({
 
   return (
     <>
+      {/* All-modules-complete modal */}
+      {showModuleComplete && (
+        <BeltAwardModal
+          mode="module-complete"
+          onClose={() => {
+            setShowModuleComplete(false)
+            window.location.href = navigateTo
+          }}
+        />
+      )}
+
+      {/* Belt-earned modal */}
       {beltModal && (
         <BeltAwardModal
+          mode="belt-earned"
           beltName={beltModal}
           onClose={() => {
             setBeltModal(null)
@@ -55,7 +72,7 @@ export default function LessonCompleteButton({
         />
       )}
 
-      {completed && !beltModal ? (
+      {completed && !beltModal && !showModuleComplete ? (
         <div className="flex items-center gap-2 text-green-600 font-semibold text-sm min-h-[44px]">
           <span aria-hidden>✅</span>
           <span>Completed</span>

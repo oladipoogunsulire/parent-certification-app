@@ -44,6 +44,7 @@ export async function updateLessonProgress(
         beltChanged: false,
         newBelt: null as string | null,
         previousBelt: null as string | null,
+        allModulesComplete: false,
       }))
       return { success: true, beltUpdate }
     }

@@ -2,6 +2,8 @@ import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import UserMenu from "./UserMenu"
 import MobileNavToggle from "./MobileNavToggle"
+import { BLACK_BELT_EXAM_ENABLED } from "@/lib/feature-flags"
+import { getCompletedModuleCount } from "@/lib/module-completion"
 
 export default async function AppHeader() {
   const session = await auth()
@@ -12,17 +14,19 @@ export default async function AppHeader() {
     image: string | null
     isAdmin: boolean
   } | null = null
+  let showExamLink = false
 
   if (session?.user?.email) {
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
       select: {
-        name: true,
-        firstName: true,
+        id:          true,
+        name:        true,
+        firstName:   true,
         displayName: true,
-        email: true,
-        image: true,
-        role: true,
+        email:       true,
+        image:       true,
+        role:        true,
       },
     })
 
@@ -35,9 +39,19 @@ export default async function AppHeader() {
 
       userProps = {
         name,
-        email: user.email,
-        image: user.image,
+        email:   user.email,
+        image:   user.image,
         isAdmin: user.role === "ADMIN",
+      }
+
+      // Show Exam link when exam is enabled and user has unlocked it
+      // (completed all 10 modules OR has a previous attempt)
+      if (BLACK_BELT_EXAM_ENABLED) {
+        const [completedCount, attemptCount] = await Promise.all([
+          getCompletedModuleCount(user.id),
+          prisma.examAttempt.count({ where: { userId: user.id } }),
+        ])
+        showExamLink = completedCount >= 10 || attemptCount > 0
       }
     }
   }
@@ -54,6 +68,11 @@ export default async function AppHeader() {
           <a href="/modules" className="text-sm text-foreground/70 hover:text-foreground transition-colors">
             Modules
           </a>
+          {showExamLink && (
+            <a href="/exam" className="text-sm text-foreground/70 hover:text-foreground transition-colors">
+              Exam
+            </a>
+          )}
           {userProps ? (
             <UserMenu {...userProps} />
           ) : (
@@ -72,6 +91,7 @@ export default async function AppHeader() {
           <MobileNavToggle
             isLoggedIn={!!userProps}
             isAdmin={userProps?.isAdmin ?? false}
+            showExamLink={showExamLink}
           />
         </div>
       </div>

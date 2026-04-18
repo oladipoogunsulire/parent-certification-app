@@ -64,6 +64,7 @@ export async function POST(
       beltChanged: false,
       newBelt: null,
       previousBelt: null,
+      allModulesComplete: false,
     }))
 
     // Fetch the newly-created attempt (last one for this user+scenario)

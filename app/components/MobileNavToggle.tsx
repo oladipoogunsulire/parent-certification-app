@@ -5,9 +5,10 @@ import { useState } from "react"
 interface Props {
   isLoggedIn: boolean
   isAdmin: boolean
+  showExamLink?: boolean
 }
 
-export default function MobileNavToggle({ isLoggedIn, isAdmin }: Props) {
+export default function MobileNavToggle({ isLoggedIn, isAdmin, showExamLink = false }: Props) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -38,6 +39,15 @@ export default function MobileNavToggle({ isLoggedIn, isAdmin }: Props) {
           >
             Modules
           </a>
+          {showExamLink && (
+            <a
+              href="/exam"
+              onClick={() => setOpen(false)}
+              className="flex items-center min-h-[44px] px-3 rounded-lg text-foreground/70 hover:text-foreground hover:bg-gray-50 text-sm font-medium transition-colors"
+            >
+              Exam
+            </a>
+          )}
           {isLoggedIn ? (
             <>
               <a
