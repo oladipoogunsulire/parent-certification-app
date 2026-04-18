@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import DeleteButton from "@/app/components/DeleteButton"
+import { EXAMS_ENABLED } from "@/lib/feature-flags"
 
 export default async function TrackEditPage({
   params,
@@ -60,20 +61,22 @@ export default async function TrackEditPage({
       </div>
 
       {/* Belt ladder */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
-        <h3 className="font-semibold text-gray-900 mb-4">Belt Ladder</h3>
-        <div className="flex gap-2">
-          {track.belts.map((belt) => (
-            <div key={belt.id} className="flex-1 text-center p-3 bg-gray-50 rounded-lg border border-gray-200">
-              <p className="text-sm font-medium text-gray-900">{belt.beltLevel}</p>
-              <p className="text-xs text-gray-500">{belt.passingThreshold}% to pass</p>
-              {belt.expirable && (
-                <p className="text-xs text-orange-600 mt-1">Expires</p>
-              )}
-            </div>
-          ))}
+      {EXAMS_ENABLED && (
+        <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+          <h3 className="font-semibold text-gray-900 mb-4">Belt Ladder</h3>
+          <div className="flex gap-2">
+            {track.belts.map((belt) => (
+              <div key={belt.id} className="flex-1 text-center p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <p className="text-sm font-medium text-gray-900">{belt.beltLevel}</p>
+                <p className="text-xs text-gray-500">{belt.passingThreshold}% to pass</p>
+                {belt.expirable && (
+                  <p className="text-xs text-orange-600 mt-1">Expires</p>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Modules */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -140,67 +143,69 @@ export default async function TrackEditPage({
         )}
       </div>
       {/* Question Bank */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6 mt-6">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 className="font-semibold text-gray-900">Question Bank</h3>
-            <p className="text-xs text-gray-500 mt-0.5">
-              {track.questions.length} question{track.questions.length !== 1 ? "s" : ""} across all belts
-            </p>
+      {EXAMS_ENABLED && (
+        <div className="bg-white rounded-lg border border-gray-200 p-6 mt-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="font-semibold text-gray-900">Question Bank</h3>
+              <p className="text-xs text-gray-500 mt-0.5">
+                {track.questions.length} question{track.questions.length !== 1 ? "s" : ""} across all belts
+              </p>
+            </div>
+            <Link
+              href={`/admin/tracks/${track.id}/questions/new`}
+              className="bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-blue-700"
+            >
+              Add question
+            </Link>
           </div>
-          <Link
-            href={`/admin/tracks/${track.id}/questions/new`}
-            className="bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-blue-700"
-          >
-            Add question
-          </Link>
-        </div>
 
-        {track.questions.length === 0 ? (
-          <p className="text-gray-500 text-sm text-center py-8">
-            No questions yet. Add questions to enable belt exams.
-          </p>
-        ) : (
-          <div className="space-y-2">
-            {track.questions.map((question, index) => (
-              <div
-                key={question.id}
-                className="border border-gray-200 rounded-lg p-4 flex items-start justify-between"
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${beltBadgeColor(question.belt.beltLevel)}`}>
-                      {question.belt.beltLevel}
-                    </span>
-                    <span className="text-xs text-gray-400">
-                      {question.questionType.replace("_", " ")} · Difficulty {question.difficultyLevel}
-                    </span>
+          {track.questions.length === 0 ? (
+            <p className="text-gray-500 text-sm text-center py-8">
+              No questions yet. Add questions to enable belt exams.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {track.questions.map((question) => (
+                <div
+                  key={question.id}
+                  className="border border-gray-200 rounded-lg p-4 flex items-start justify-between"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${beltBadgeColor(question.belt.beltLevel)}`}>
+                        {question.belt.beltLevel}
+                      </span>
+                      <span className="text-xs text-gray-400">
+                        {question.questionType.replace("_", " ")} · Difficulty {question.difficultyLevel}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-900 line-clamp-2">{question.questionText}</p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {question.options.length} option{question.options.length !== 1 ? "s" : ""} ·{" "}
+                      {question.options.filter((o) => o.isCorrect).length} correct
+                    </p>
                   </div>
-                  <p className="text-sm text-gray-900 line-clamp-2">{question.questionText}</p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    {question.options.length} option{question.options.length !== 1 ? "s" : ""} ·{" "}
-                    {question.options.filter((o) => o.isCorrect).length} correct
-                  </p>
+                  <div className="ml-4 flex-shrink-0 flex items-center gap-3">
+                    <Link
+                      href={`/admin/tracks/${track.id}/questions/${question.id}`}
+                      className="text-sm text-blue-600 hover:underline"
+                    >
+                      Edit
+                    </Link>
+                    <DeleteButton
+                      url={`/api/admin/tracks/${track.id}/questions/${question.id}`}
+                      confirmMessage="Delete this question? This cannot be undone."
+                      label="Delete"
+                      className="text-sm text-red-600 hover:underline"
+                    />
+                  </div>
                 </div>
-                <div className="ml-4 flex-shrink-0 flex items-center gap-3">
-                  <Link
-                    href={`/admin/tracks/${track.id}/questions/${question.id}`}
-                    className="text-sm text-blue-600 hover:underline"
-                  >
-                    Edit
-                  </Link>
-                  <DeleteButton
-                    url={`/api/admin/tracks/${track.id}/questions/${question.id}`}
-                    confirmMessage="Delete this question? This cannot be undone."
-                    label="Delete"
-                    className="text-sm text-red-600 hover:underline"
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
