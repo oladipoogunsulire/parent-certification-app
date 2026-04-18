@@ -9,10 +9,9 @@ A module is complete when:
 Belt thresholds (modules completed → belt):
 - 0 → No belt
 - 1–2 → White Belt
-- 3–4 → Yellow Belt
-- 5–6 → Green Belt
-- 7–8 → Blue Belt
-- 9 → Brown Belt
+- 3–5 → Yellow Belt
+- 6–7 → Green Belt
+- 8–9 → Blue Belt
 - 10 + pass final exam → Black Belt
 
 Belt is stored on the User model as `currentBelt` (String?) and `beltEarnedAt` (DateTime?).
@@ -20,7 +19,7 @@ Belt check runs after every lesson completion and every scenario attempt via `ch
 
 ## Black Belt Exam
 
-The Black Belt exam is the single final certification exam. It is only accessible to users who have earned a Brown Belt (completed 9 modules). Controlled by BLACK_BELT_EXAM_ENABLED in lib/feature-flags.ts.
+The Black Belt exam is the single final certification exam. It is only accessible to users who have completed all 10 modules. Controlled by BLACK_BELT_EXAM_ENABLED in lib/feature-flags.ts.
 
 Exam is fully admin-configurable via ExamConfiguration model (one row). Default settings:
 - Passing threshold: 90%

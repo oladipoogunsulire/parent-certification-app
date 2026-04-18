@@ -115,11 +115,10 @@ export async function getCompletedModuleCount(userId: string): Promise<number> {
 export function getBeltForModuleCount(count: number): string | null {
   if (count === 0) return null
   if (count <= 2)  return "White Belt"
-  if (count <= 4)  return "Yellow Belt"
-  if (count <= 6)  return "Green Belt"
-  if (count <= 8)  return "Blue Belt"
-  if (count === 9) return "Brown Belt"
-  return null // Black Belt requires final exam
+  if (count <= 5)  return "Yellow Belt"
+  if (count <= 7)  return "Green Belt"
+  if (count <= 9)  return "Blue Belt"
+  return null // 10 modules → Black Belt requires final exam
 }
 
 // ---------------------------------------------------------------------------

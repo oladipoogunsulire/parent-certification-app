@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { BLACK_BELT_EXAM_ENABLED } from "@/lib/feature-flags"
+import { getCompletedModuleCount } from "@/lib/module-completion"
 import { Prisma } from "@prisma/client"
 import type { ExamAttempt, ExamCertificate, ExamConfiguration } from "@prisma/client"
 
@@ -69,24 +70,22 @@ function generateCuid(): string {
 
 export async function isEligibleForExam(
   userId: string
-): Promise<{ eligible: boolean; reason: string | null }> {
+): Promise<{ eligible: boolean; reason: string | null; completedModuleCount: number }> {
   if (!BLACK_BELT_EXAM_ENABLED) {
-    return { eligible: false, reason: "The exam is not currently available" }
+    return { eligible: false, reason: "The exam is not currently available", completedModuleCount: 0 }
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { currentBelt: true },
-  })
+  const completedModuleCount = await getCompletedModuleCount(userId)
 
-  if (user?.currentBelt !== "Brown Belt") {
+  if (completedModuleCount < 10) {
     return {
       eligible: false,
-      reason: "You need to earn your Brown Belt first",
+      reason: "Complete all 10 modules to unlock the Black Belt exam",
+      completedModuleCount,
     }
   }
 
-  return { eligible: true, reason: null }
+  return { eligible: true, reason: null, completedModuleCount }
 }
 
 // ---------------------------------------------------------------------------

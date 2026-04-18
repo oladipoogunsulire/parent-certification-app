@@ -11,7 +11,7 @@ export async function GET() {
 
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
-    select: { id: true, currentBelt: true },
+    select: { id: true },
   })
   if (!user) {
     return NextResponse.json({ error: "User not found" }, { status: 401 })
@@ -23,9 +23,9 @@ export async function GET() {
   ])
 
   return NextResponse.json({
-    eligible:     eligibility.eligible,
-    reason:       eligibility.reason,
-    currentBelt:  user.currentBelt,
-    attemptCount: history.length,
+    eligible:             eligibility.eligible,
+    reason:               eligibility.reason,
+    completedModuleCount: eligibility.completedModuleCount,
+    attemptCount:         history.length,
   })
 }
