@@ -274,13 +274,14 @@ model Lesson {
 }
 
 model LessonResource {
-  id          String   @id @default(cuid())
-  lessonId    String
-  fileName    String
-  fileKey     String   // R2 object key
-  fileSize    Int      // bytes
-  mimeType    String
-  uploadedAt  DateTime @default(now())
+  id            String   @id @default(cuid())
+  lessonId      String
+  fileName      String
+  fileKey       String   // R2 object key
+  fileSize      Int      // bytes
+  mimeType      String
+  uploadedAt    DateTime @default(now())
+  downloadCount Int      @default(0)
 
   lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 

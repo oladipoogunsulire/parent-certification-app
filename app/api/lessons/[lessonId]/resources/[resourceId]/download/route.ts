@@ -50,15 +50,22 @@ export async function GET(
     return NextResponse.json({ error: "Resource not found" }, { status: 404 })
   }
 
-  const url = await getSignedUrl(
-    r2Client,
-    new GetObjectCommand({
-      Bucket: R2_BUCKET_NAME,
-      Key: resource.fileKey,
-      ResponseContentDisposition: `attachment; filename="${encodeURIComponent(resource.fileName)}"`,
+  // Generate signed URL and increment download counter in parallel
+  const [url] = await Promise.all([
+    getSignedUrl(
+      r2Client,
+      new GetObjectCommand({
+        Bucket: R2_BUCKET_NAME,
+        Key: resource.fileKey,
+        ResponseContentDisposition: `attachment; filename="${encodeURIComponent(resource.fileName)}"`,
+      }),
+      { expiresIn: 15 * 60 } // 15 minutes
+    ),
+    prisma.lessonResource.update({
+      where: { id: resourceId },
+      data:  { downloadCount: { increment: 1 } },
     }),
-    { expiresIn: 15 * 60 } // 15 minutes
-  )
+  ])
 
   return NextResponse.redirect(url)
 }
