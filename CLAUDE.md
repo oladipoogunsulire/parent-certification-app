@@ -1,5 +1,17 @@
 @AGENTS.md
 
+## Database Migration Rules
+
+ALWAYS use `pnpm prisma migrate dev --name description_of_change` for all schema changes — new models, new fields, renamed fields, deleted fields.
+
+NEVER use raw SQL directly on Neon (ALTER TABLE, CREATE TABLE, DROP TABLE etc.) — this bypasses Prisma's column naming conventions and causes camelCase/snake_case mismatches that break Prisma queries silently.
+
+This has caused production bugs twice:
+- `download_count` column should have been `downloadCount`
+- `admin_id`, `target_user_id`, `created_at` should have been `adminId`, `targetUserId`, `createdAt`
+
+The only exception is renaming existing incorrectly-named columns to fix a previous raw SQL mistake — in that case use ALTER TABLE RENAME COLUMN to match the camelCase name Prisma expects.
+
 ## Belt Progression
 
 A module is complete when:
