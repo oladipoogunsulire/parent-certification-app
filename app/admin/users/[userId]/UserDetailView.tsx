@@ -1,12 +1,14 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useState, useCallback } from "react"
+import { useRouter } from "next/navigation"
 
 // ---------------------------------------------------------------------------
-// Types (exported so page.tsx can import them)
+// Types
 // ---------------------------------------------------------------------------
 
 export interface UserDetailData {
+  adminId: string
   user: {
     id:           string
     email:        string
@@ -50,12 +52,12 @@ export interface UserDetailData {
     scenarios:   { id: string; scenarioTitle: string | null }[]
   }[]
   examAttempts: {
-    id:              string
-    attemptNumber:   number
-    startedAt:       string
-    completedAt:     string | null
-    score:           number | null
-    passed:          boolean | null
+    id:               string
+    attemptNumber:    number
+    startedAt:        string
+    completedAt:      string | null
+    score:            number | null
+    passed:           boolean | null
     timeTakenSeconds: number | null
   }[]
   examCertificate: {
@@ -63,11 +65,27 @@ export interface UserDetailData {
     issuedAt:        string
     score:           number
   } | null
+  adminActionLogs: {
+    id:        string
+    action:    string
+    detail:    string
+    createdAt: string
+    adminName: string | null
+  }[]
 }
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
+
+const BELT_OPTIONS = [
+  { value: "", label: "None (No Belt)" },
+  { value: "White Belt",  label: "White Belt" },
+  { value: "Yellow Belt", label: "Yellow Belt" },
+  { value: "Green Belt",  label: "Green Belt" },
+  { value: "Blue Belt",   label: "Blue Belt" },
+  { value: "Black Belt",  label: "Black Belt" },
+]
 
 const BELT_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   "No Belt":     { bg: "#F3F4F6", text: "#6B7280", border: "#D1D5DB" },
@@ -78,8 +96,16 @@ const BELT_COLORS: Record<string, { bg: string; text: string; border: string }> 
   "Black Belt":  { bg: "#1E3A5F", text: "#FFFFFF", border: "#1E3A5F" },
 }
 
+const ACTION_BADGE: Record<string, { bg: string; text: string; label: string }> = {
+  BELT_ADJUSTED:        { bg: "#DBEAFE", text: "#1E40AF", label: "Belt Adjusted" },
+  PROGRESS_RESET:       { bg: "#FEF3C7", text: "#92400E", label: "Progress Reset" },
+  ACCOUNT_DEACTIVATED:  { bg: "#FEE2E2", text: "#991B1B", label: "Deactivated" },
+  ACCOUNT_ACTIVATED:    { bg: "#DCFCE7", text: "#166534", label: "Activated" },
+  ROLE_CHANGED:         { bg: "#F3E8FF", text: "#6B21A8", label: "Role Changed" },
+}
+
 // ---------------------------------------------------------------------------
-// Small helpers
+// Helpers
 // ---------------------------------------------------------------------------
 
 function getDisplayName(u: UserDetailData["user"]): string {
@@ -114,7 +140,14 @@ function formatTime(seconds: number | null): string {
 function relativeDate(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime()
   const days = Math.floor(diff / 86_400_000)
-  if (days === 0) return "today"
+  if (days === 0) {
+    const hrs = Math.floor(diff / 3_600_000)
+    if (hrs === 0) {
+      const mins = Math.floor(diff / 60_000)
+      return mins < 2 ? "just now" : `${mins}m ago`
+    }
+    return `${hrs}h ago`
+  }
   if (days === 1) return "yesterday"
   if (days < 30) return `${days}d ago`
   return formatDate(iso)
@@ -176,7 +209,602 @@ function MiniProgress({ value, max }: { value: number; max: number }) {
 }
 
 // ---------------------------------------------------------------------------
-// Section 0 — Header
+// Toast
+// ---------------------------------------------------------------------------
+
+function Toast({
+  message,
+  type,
+  onDismiss,
+}: {
+  message: string
+  type: "success" | "error"
+  onDismiss: () => void
+}) {
+  return (
+    <div
+      className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg text-sm font-medium animate-in slide-in-from-bottom-4 duration-300 ${
+        type === "success"
+          ? "bg-green-600 text-white"
+          : "bg-red-600 text-white"
+      }`}
+    >
+      <span>{type === "success" ? "✓" : "✗"}</span>
+      <span>{message}</span>
+      <button onClick={onDismiss} className="ml-2 opacity-70 hover:opacity-100 text-lg leading-none">×</button>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Confirm Dialog
+// ---------------------------------------------------------------------------
+
+function ConfirmDialog({
+  title,
+  description,
+  confirmLabel,
+  danger,
+  onConfirm,
+  onCancel,
+}: {
+  title:        string
+  description:  string
+  confirmLabel: string
+  danger:       boolean
+  onConfirm:    () => void
+  onCancel:     () => void
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40" onClick={onCancel} />
+      <div className="relative bg-white rounded-xl shadow-2xl max-w-md w-full p-6 z-10">
+        <h4 className="text-base font-bold text-gray-900 mb-2">{title}</h4>
+        <p className="text-sm text-gray-600 mb-6 leading-relaxed">{description}</p>
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className={`px-4 py-2 text-sm font-bold rounded-lg transition-colors ${
+              danger
+                ? "bg-red-600 text-white hover:bg-red-700"
+                : "bg-[#1E3A5F] text-white hover:bg-[#162d4a]"
+            }`}
+          >
+            {confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Action card wrapper
+// ---------------------------------------------------------------------------
+
+function ActionCard({
+  title,
+  children,
+}: {
+  title: string
+  children: React.ReactNode
+}) {
+  return (
+    <div className="bg-gray-50 rounded-xl border border-gray-200 p-4 flex flex-col gap-3">
+      <p className="text-sm font-bold text-[#1E3A5F]">{title}</p>
+      {children}
+    </div>
+  )
+}
+
+function ReasonInput({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value:       string
+  onChange:    (v: string) => void
+  placeholder?: string
+}) {
+  const tooShort = value.length > 0 && value.length < 10
+  return (
+    <div>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder ?? "Reason (min 10 characters)…"}
+        className={`w-full text-sm border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/30 focus:border-[#1E3A5F] ${
+          tooShort ? "border-red-300 bg-red-50" : "border-gray-200"
+        }`}
+      />
+      {tooShort && (
+        <p className="text-xs text-red-500 mt-1">{10 - value.length} more characters needed</p>
+      )}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Card 1 — Belt Adjustment
+// ---------------------------------------------------------------------------
+
+function BeltCard({
+  userId,
+  displayName,
+  currentBelt,
+  onSuccess,
+  onError,
+}: {
+  userId:      string
+  displayName: string
+  currentBelt: string | null
+  onSuccess:   (msg: string) => void
+  onError:     (msg: string) => void
+}) {
+  const router = useRouter()
+  const [selectedBelt, setSelectedBelt] = useState<string>(currentBelt ?? "")
+  const [reason,       setReason]       = useState("")
+  const [loading,      setLoading]      = useState(false)
+  const [confirm,      setConfirm]      = useState(false)
+
+  const currentLabel = currentBelt ?? "None"
+  const newLabel     = selectedBelt === "" ? "None" : selectedBelt
+  const reasonOk     = reason.trim().length >= 10
+  const beltChanged  = selectedBelt !== (currentBelt ?? "")
+  const canSave      = reasonOk && beltChanged
+
+  async function doSave() {
+    setLoading(true)
+    setConfirm(false)
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/belt`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ belt: selectedBelt === "" ? null : selectedBelt, reason }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error ?? "Failed")
+      onSuccess(json.message ?? "Belt updated.")
+      setReason("")
+      router.refresh()
+    } catch (e) {
+      onError(e instanceof Error ? e.message : "Something went wrong.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <>
+      {confirm && (
+        <ConfirmDialog
+          title="Adjust Belt?"
+          description={`Are you sure you want to change ${displayName}'s belt from ${currentLabel} to ${newLabel}? This action will be logged.`}
+          confirmLabel="Yes, Update Belt"
+          danger={false}
+          onConfirm={doSave}
+          onCancel={() => setConfirm(false)}
+        />
+      )}
+      <ActionCard title="Adjust Belt">
+        <p className="text-xs text-gray-500">Current: <BeltBadge belt={currentBelt} /></p>
+        <select
+          value={selectedBelt}
+          onChange={(e) => setSelectedBelt(e.target.value)}
+          className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]/30"
+        >
+          {BELT_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </select>
+        <ReasonInput value={reason} onChange={setReason} />
+        <button
+          disabled={!canSave || loading}
+          onClick={() => setConfirm(true)}
+          className="w-full text-sm font-bold py-2 rounded-lg bg-[#1E3A5F] text-white hover:bg-[#162d4a] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        >
+          {loading ? "Saving…" : "Save Belt"}
+        </button>
+      </ActionCard>
+    </>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Card 2 — Reset Progress
+// ---------------------------------------------------------------------------
+
+function ResetCard({
+  userId,
+  displayName,
+  onSuccess,
+  onError,
+}: {
+  userId:      string
+  displayName: string
+  onSuccess:   (msg: string) => void
+  onError:     (msg: string) => void
+}) {
+  const router = useRouter()
+  const [resetLessons,        setResetLessons]        = useState(false)
+  const [resetScenarios,      setResetScenarios]      = useState(false)
+  const [resetInfluenceScore, setResetInfluenceScore] = useState(false)
+  const [resetBelt,           setResetBelt]           = useState(false)
+  const [reason,              setReason]              = useState("")
+  const [loading,             setLoading]             = useState(false)
+  const [confirm,             setConfirm]             = useState(false)
+
+  const anythingChecked = resetLessons || resetScenarios || resetInfluenceScore || resetBelt
+  const reasonOk        = reason.trim().length >= 10
+  const canReset        = anythingChecked && reasonOk
+
+  const checkedLabels = [
+    resetLessons   && "lesson progress",
+    resetScenarios && "scenario attempts",
+    resetInfluenceScore && !resetScenarios && "influence score",
+    resetBelt      && "belt",
+  ].filter(Boolean).join(", ")
+
+  async function doReset() {
+    setLoading(true)
+    setConfirm(false)
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/reset-progress`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          resetLessons,
+          resetScenarios,
+          resetInfluenceScore: resetInfluenceScore || resetScenarios,
+          resetBelt,
+          reason,
+        }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error ?? "Failed")
+      onSuccess(json.message ?? "Progress reset.")
+      setResetLessons(false)
+      setResetScenarios(false)
+      setResetInfluenceScore(false)
+      setResetBelt(false)
+      setReason("")
+      router.refresh()
+    } catch (e) {
+      onError(e instanceof Error ? e.message : "Something went wrong.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  function Checkbox({
+    checked,
+    onChange,
+    label,
+  }: {
+    checked: boolean; onChange: (v: boolean) => void; label: string
+  }) {
+    return (
+      <label className="flex items-center gap-2 cursor-pointer select-none">
+        <input
+          type="checkbox"
+          checked={checked}
+          onChange={(e) => onChange(e.target.checked)}
+          className="w-4 h-4 rounded border-gray-300 accent-[#1E3A5F]"
+        />
+        <span className="text-sm text-gray-700">{label}</span>
+      </label>
+    )
+  }
+
+  return (
+    <>
+      {confirm && (
+        <ConfirmDialog
+          title="Reset Progress?"
+          description={`You are about to permanently delete: ${checkedLabels} for ${displayName}. This cannot be undone.`}
+          confirmLabel="Yes, Reset"
+          danger={true}
+          onConfirm={doReset}
+          onCancel={() => setConfirm(false)}
+        />
+      )}
+      <ActionCard title="Reset Progress">
+        <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-800">
+          ⚠️ This action cannot be undone. Selected data will be permanently deleted.
+        </div>
+        <div className="space-y-2">
+          <Checkbox checked={resetLessons}        onChange={setResetLessons}        label="Reset lesson progress" />
+          <Checkbox checked={resetScenarios}      onChange={setResetScenarios}      label="Reset scenario attempts and Influence Score" />
+          <Checkbox checked={resetInfluenceScore} onChange={setResetInfluenceScore} label="Reset Influence Score only" />
+          <Checkbox checked={resetBelt}           onChange={setResetBelt}           label="Reset belt" />
+        </div>
+        <ReasonInput value={reason} onChange={setReason} />
+        <button
+          disabled={!canReset || loading}
+          onClick={() => setConfirm(true)}
+          className="w-full text-sm font-bold py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        >
+          {loading ? "Resetting…" : "Reset Selected"}
+        </button>
+      </ActionCard>
+    </>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Card 3 — Account Status
+// ---------------------------------------------------------------------------
+
+function StatusCard({
+  userId,
+  displayName,
+  isActive,
+  isSelf,
+  onSuccess,
+  onError,
+}: {
+  userId:      string
+  displayName: string
+  isActive:    boolean
+  isSelf:      boolean
+  onSuccess:   (msg: string) => void
+  onError:     (msg: string) => void
+}) {
+  const router  = useRouter()
+  const [reason,  setReason]  = useState("")
+  const [loading, setLoading] = useState(false)
+  const [confirm, setConfirm] = useState(false)
+
+  const reasonOk  = reason.trim().length >= 10
+  const canToggle = reasonOk && !isSelf
+  const willActivate = !isActive
+
+  async function doToggle() {
+    setLoading(true)
+    setConfirm(false)
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: willActivate, reason }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error ?? "Failed")
+      onSuccess(json.message ?? "Account status updated.")
+      setReason("")
+      router.refresh()
+    } catch (e) {
+      onError(e instanceof Error ? e.message : "Something went wrong.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <>
+      {confirm && (
+        <ConfirmDialog
+          title={willActivate ? "Activate Account?" : "Deactivate Account?"}
+          description={`Are you sure you want to ${willActivate ? "activate" : "deactivate"} ${displayName}'s account? This action will be logged.`}
+          confirmLabel={willActivate ? "Yes, Activate" : "Yes, Deactivate"}
+          danger={!willActivate}
+          onConfirm={doToggle}
+          onCancel={() => setConfirm(false)}
+        />
+      )}
+      <ActionCard title="Account Status">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500">Current:</span>
+          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+            isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"
+          }`}>
+            {isActive ? "Active" : "Inactive"}
+          </span>
+        </div>
+        {isSelf && (
+          <p className="text-xs text-amber-600">You cannot change your own account status.</p>
+        )}
+        <ReasonInput value={reason} onChange={setReason} />
+        <button
+          disabled={!canToggle || loading}
+          onClick={() => setConfirm(true)}
+          className={`w-full text-sm font-bold py-2 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-colors ${
+            willActivate
+              ? "bg-green-600 text-white hover:bg-green-700"
+              : "bg-red-600 text-white hover:bg-red-700"
+          }`}
+        >
+          {loading
+            ? "Updating…"
+            : willActivate
+            ? "Activate Account"
+            : "Deactivate Account"}
+        </button>
+      </ActionCard>
+    </>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Card 4 — Role Management
+// ---------------------------------------------------------------------------
+
+function RoleCard({
+  userId,
+  displayName,
+  currentRole,
+  isSelf,
+  onSuccess,
+  onError,
+}: {
+  userId:      string
+  displayName: string
+  currentRole: string
+  isSelf:      boolean
+  onSuccess:   (msg: string) => void
+  onError:     (msg: string) => void
+}) {
+  const router  = useRouter()
+  const [reason,  setReason]  = useState("")
+  const [loading, setLoading] = useState(false)
+  const [confirm, setConfirm] = useState(false)
+
+  const isAdmin   = currentRole === "ADMIN"
+  const newRole   = isAdmin ? "USER" : "ADMIN"
+  const reasonOk  = reason.trim().length >= 10
+  const canToggle = reasonOk && !isSelf
+
+  async function doToggle() {
+    setLoading(true)
+    setConfirm(false)
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/role`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: newRole, reason }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error ?? "Failed")
+      onSuccess(json.message ?? "Role updated.")
+      setReason("")
+      router.refresh()
+    } catch (e) {
+      onError(e instanceof Error ? e.message : "Something went wrong.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <>
+      {confirm && (
+        <ConfirmDialog
+          title={isAdmin ? "Demote to User?" : "Promote to Admin?"}
+          description={`Are you sure you want to ${isAdmin ? "demote" : "promote"} ${displayName} ${isAdmin ? "from Admin to User" : "to Admin"}? This action will be logged.`}
+          confirmLabel={isAdmin ? "Yes, Demote" : "Yes, Promote"}
+          danger={isAdmin}
+          onConfirm={doToggle}
+          onCancel={() => setConfirm(false)}
+        />
+      )}
+      <ActionCard title="Role">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500">Current:</span>
+          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+            currentRole === "ADMIN"
+              ? "bg-purple-100 text-purple-700"
+              : "bg-gray-100 text-gray-600"
+          }`}>
+            {currentRole}
+          </span>
+        </div>
+        {isSelf && (
+          <p className="text-xs text-amber-600">You cannot change your own role.</p>
+        )}
+        <ReasonInput value={reason} onChange={setReason} />
+        <button
+          disabled={!canToggle || loading}
+          onClick={() => setConfirm(true)}
+          className={`w-full text-sm font-bold py-2 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-colors ${
+            isAdmin
+              ? "bg-gray-600 text-white hover:bg-gray-700"
+              : "bg-purple-600 text-white hover:bg-purple-700"
+          }`}
+        >
+          {loading
+            ? "Updating…"
+            : isAdmin
+            ? "Demote to User"
+            : "Promote to Admin"}
+        </button>
+      </ActionCard>
+    </>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Admin Actions Panel
+// ---------------------------------------------------------------------------
+
+function AdminActionsPanel({
+  userId,
+  adminId,
+  user,
+}: {
+  userId:  string
+  adminId: string
+  user:    UserDetailData["user"]
+}) {
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null)
+  const displayName       = getDisplayName(user)
+  const isSelf            = userId === adminId
+
+  const showSuccess = useCallback((msg: string) => {
+    setToast({ message: msg, type: "success" })
+    setTimeout(() => setToast(null), 4000)
+  }, [])
+
+  const showError = useCallback((msg: string) => {
+    setToast({ message: msg, type: "error" })
+    setTimeout(() => setToast(null), 5000)
+  }, [])
+
+  return (
+    <>
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onDismiss={() => setToast(null)}
+        />
+      )}
+      <Panel className="mb-6">
+        <SectionTitle>Admin Actions</SectionTitle>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <BeltCard
+            userId={userId}
+            displayName={displayName}
+            currentBelt={user.currentBelt}
+            onSuccess={showSuccess}
+            onError={showError}
+          />
+          <ResetCard
+            userId={userId}
+            displayName={displayName}
+            onSuccess={showSuccess}
+            onError={showError}
+          />
+          <StatusCard
+            userId={userId}
+            displayName={displayName}
+            isActive={user.isActive}
+            isSelf={isSelf}
+            onSuccess={showSuccess}
+            onError={showError}
+          />
+          <RoleCard
+            userId={userId}
+            displayName={displayName}
+            currentRole={user.role}
+            isSelf={isSelf}
+            onSuccess={showSuccess}
+            onError={showError}
+          />
+        </div>
+      </Panel>
+    </>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Header
 // ---------------------------------------------------------------------------
 
 function Header({ user }: { user: UserDetailData["user"] }) {
@@ -187,7 +815,6 @@ function Header({ user }: { user: UserDetailData["user"] }) {
 
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-6">
-      {/* Breadcrumb */}
       <nav className="text-xs text-gray-400 mb-4 flex items-center gap-1">
         <a href="/admin/users" className="hover:text-[#1E3A5F] transition-colors">Users</a>
         <span>›</span>
@@ -195,7 +822,6 @@ function Header({ user }: { user: UserDetailData["user"] }) {
       </nav>
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
-        {/* Avatar */}
         {user.image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -212,7 +838,6 @@ function Header({ user }: { user: UserDetailData["user"] }) {
           </div>
         )}
 
-        {/* Info */}
         <div className="flex-1 min-w-0">
           <h2 className="text-xl font-extrabold text-[#1E3A5F] truncate">{displayName}</h2>
           <p className="text-sm text-gray-500 mt-0.5">{user.email}</p>
@@ -221,8 +846,6 @@ function Header({ user }: { user: UserDetailData["user"] }) {
               month: "long", year: "numeric",
             })}
           </p>
-
-          {/* Badges */}
           <div className="flex flex-wrap gap-2 mt-3">
             <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${
               user.role === "ADMIN"
@@ -254,7 +877,7 @@ function Header({ user }: { user: UserDetailData["user"] }) {
 }
 
 // ---------------------------------------------------------------------------
-// Section 1 — Influence Journey Summary
+// Section 1 — Influence Summary
 // ---------------------------------------------------------------------------
 
 function InfluenceSummary({
@@ -268,85 +891,53 @@ function InfluenceSummary({
 }) {
   const score = user.influenceProfile?.influenceScore ?? 0
   const level = user.influenceProfile?.influenceLevel ?? "—"
-
   return (
     <section className="mb-6">
       <SectionTitle>Influence Journey</SectionTitle>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard
-          label="Influence Score"
-          value={`${Math.round(score)}/100`}
-          sub={level}
-        />
-        <StatCard
-          label="Modules Completed"
-          value={`${completedModuleCount} of 10`}
-          sub={completedModuleCount >= 10 ? "All modules done 🎉" : undefined}
-        />
-        <StatCard
-          label="Scenarios Attempted"
-          value={uniqueScenariosAttempted}
-          sub="unique scenarios"
-        />
+        <StatCard label="Influence Score"    value={`${Math.round(score)}/100`} sub={level} />
+        <StatCard label="Modules Completed"  value={`${completedModuleCount} of 10`}
+          sub={completedModuleCount >= 10 ? "All modules done 🎉" : undefined} />
+        <StatCard label="Scenarios Attempted" value={uniqueScenariosAttempted} sub="unique scenarios" />
       </div>
     </section>
   )
 }
 
 // ---------------------------------------------------------------------------
-// Section 2 — Module Progress Breakdown
+// Section 2 — Module Breakdown
 // ---------------------------------------------------------------------------
 
 type ModuleStatus = "not_started" | "in_progress" | "complete"
 
 interface ModuleRow {
-  id:                string
-  moduleTitle:       string
-  orderIndex:        number
-  beltLevel:         string
-  totalLessons:      number
-  completedLessons:  number
-  totalScenarios:    number
-  attemptedScenarios: number
-  status:            ModuleStatus
-  completedAt:       string | null
+  id: string; moduleTitle: string; orderIndex: number; beltLevel: string
+  totalLessons: number; completedLessons: number; totalScenarios: number
+  attemptedScenarios: number; status: ModuleStatus; completedAt: string | null
 }
 
 function statusBadge(status: ModuleStatus) {
   if (status === "complete") return (
-    <span className="text-xs font-medium text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">
-      ✓ Complete
-    </span>
+    <span className="text-xs font-medium text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">✓ Complete</span>
   )
   if (status === "in_progress") return (
-    <span className="text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
-      In Progress
-    </span>
+    <span className="text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">In Progress</span>
   )
   return (
-    <span className="text-xs font-medium text-gray-500 bg-gray-50 border border-gray-200 px-2 py-0.5 rounded-full">
-      Not Started
-    </span>
+    <span className="text-xs font-medium text-gray-500 bg-gray-50 border border-gray-200 px-2 py-0.5 rounded-full">Not Started</span>
   )
 }
 
 function ModuleBreakdown({ rows }: { rows: ModuleRow[] }) {
-  if (!rows.length) {
-    return <p className="text-sm text-gray-400 py-4">No module data available.</p>
-  }
-
+  if (!rows.length) return <p className="text-sm text-gray-400 py-4">No module data available.</p>
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[640px] text-sm">
         <thead>
           <tr className="border-b border-gray-100">
-            <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase">#</th>
-            <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase">Module</th>
-            <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase">Belt</th>
-            <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase w-36">Lessons</th>
-            <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase w-36">Scenarios</th>
-            <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase">Status</th>
-            <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase">Completed</th>
+            {["#", "Module", "Belt", "Lessons", "Scenarios", "Status", "Completed"].map((h) => (
+              <th key={h} className="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase">{h}</th>
+            ))}
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-50">
@@ -354,15 +945,9 @@ function ModuleBreakdown({ rows }: { rows: ModuleRow[] }) {
             <tr key={row.id} className="hover:bg-gray-50">
               <td className="py-3 px-3 text-gray-400 text-xs">{row.orderIndex}</td>
               <td className="py-3 px-3 font-medium text-gray-800">{row.moduleTitle}</td>
-              <td className="py-3 px-3">
-                <BeltBadge belt={row.beltLevel} />
-              </td>
-              <td className="py-3 px-3">
-                <MiniProgress value={row.completedLessons} max={row.totalLessons} />
-              </td>
-              <td className="py-3 px-3">
-                <MiniProgress value={row.attemptedScenarios} max={row.totalScenarios} />
-              </td>
+              <td className="py-3 px-3"><BeltBadge belt={row.beltLevel} /></td>
+              <td className="py-3 px-3"><MiniProgress value={row.completedLessons} max={row.totalLessons} /></td>
+              <td className="py-3 px-3"><MiniProgress value={row.attemptedScenarios} max={row.totalScenarios} /></td>
               <td className="py-3 px-3">{statusBadge(row.status)}</td>
               <td className="py-3 px-3 text-xs text-gray-400">{formatDate(row.completedAt)}</td>
             </tr>
@@ -378,45 +963,30 @@ function ModuleBreakdown({ rows }: { rows: ModuleRow[] }) {
 // ---------------------------------------------------------------------------
 
 interface ScenarioRow {
-  scenarioId:    string
-  scenarioTitle: string
-  moduleName:    string
-  attempts:      number
-  bestScore:     number
-  lastAttempted: string
+  scenarioId: string; scenarioTitle: string; moduleName: string
+  attempts: number; bestScore: number; lastAttempted: string
 }
 
 function ScenarioPerformance({ rows }: { rows: ScenarioRow[] }) {
-  if (!rows.length) {
-    return <p className="text-sm text-gray-400 py-4 text-center">No scenarios attempted yet.</p>
-  }
-
+  if (!rows.length) return <p className="text-sm text-gray-400 py-4 text-center">No scenarios attempted yet.</p>
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[520px] text-sm">
         <thead>
           <tr className="border-b border-gray-100">
-            <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase">Scenario</th>
-            <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase">Module</th>
-            <th className="text-right py-2 px-3 text-xs font-medium text-gray-500 uppercase">Attempts</th>
-            <th className="text-right py-2 px-3 text-xs font-medium text-gray-500 uppercase">Best Score</th>
-            <th className="text-right py-2 px-3 text-xs font-medium text-gray-500 uppercase">Last Attempted</th>
+            {["Scenario", "Module", "Attempts", "Best Score", "Last Attempted"].map((h, i) => (
+              <th key={h} className={`py-2 px-3 text-xs font-medium text-gray-500 uppercase ${i >= 2 ? "text-right" : "text-left"}`}>{h}</th>
+            ))}
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-50">
           {rows.map((row) => (
             <tr key={row.scenarioId} className="hover:bg-gray-50">
-              <td className="py-2.5 px-3 font-medium text-gray-800 max-w-[200px] truncate">
-                {row.scenarioTitle}
-              </td>
+              <td className="py-2.5 px-3 font-medium text-gray-800 max-w-[200px] truncate">{row.scenarioTitle}</td>
               <td className="py-2.5 px-3 text-gray-500 max-w-[160px] truncate">{row.moduleName}</td>
               <td className="py-2.5 px-3 text-right text-gray-600">{row.attempts}</td>
-              <td className="py-2.5 px-3 text-right font-semibold text-[#1E3A5F]">
-                {Math.round(row.bestScore)}
-              </td>
-              <td className="py-2.5 px-3 text-right text-xs text-gray-400">
-                {formatDate(row.lastAttempted)}
-              </td>
+              <td className="py-2.5 px-3 text-right font-semibold text-[#1E3A5F]">{Math.round(row.bestScore)}</td>
+              <td className="py-2.5 px-3 text-right text-xs text-gray-400">{formatDate(row.lastAttempted)}</td>
             </tr>
           ))}
         </tbody>
@@ -434,9 +1004,9 @@ function ExamHistory({
   certificate,
   userId,
 }: {
-  attempts:    UserDetailData["examAttempts"]
+  attempts: UserDetailData["examAttempts"]
   certificate: UserDetailData["examCertificate"]
-  userId:      string
+  userId: string
 }) {
   return (
     <div>
@@ -447,11 +1017,9 @@ function ExamHistory({
           <table className="w-full min-w-[500px] text-sm">
             <thead>
               <tr className="border-b border-gray-100">
-                <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase">Attempt</th>
-                <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase">Date</th>
-                <th className="text-right py-2 px-3 text-xs font-medium text-gray-500 uppercase">Score</th>
-                <th className="text-center py-2 px-3 text-xs font-medium text-gray-500 uppercase">Result</th>
-                <th className="text-right py-2 px-3 text-xs font-medium text-gray-500 uppercase">Time</th>
+                {["Attempt", "Date", "Score", "Result", "Time"].map((h, i) => (
+                  <th key={h} className={`py-2 px-3 text-xs font-medium text-gray-500 uppercase ${i === 0 || i === 1 ? "text-left" : "text-center"}`}>{h}</th>
+                ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -459,40 +1027,29 @@ function ExamHistory({
                 <tr key={a.id} className="hover:bg-gray-50">
                   <td className="py-2.5 px-3 font-medium text-gray-800">#{a.attemptNumber}</td>
                   <td className="py-2.5 px-3 text-gray-500 text-xs">{formatDate(a.startedAt)}</td>
-                  <td className="py-2.5 px-3 text-right font-semibold text-[#1E3A5F]">
+                  <td className="py-2.5 px-3 text-center font-semibold text-[#1E3A5F]">
                     {a.score !== null ? `${Math.round(a.score)}%` : "—"}
                   </td>
                   <td className="py-2.5 px-3 text-center">
-                    {a.passed === null ? (
-                      <span className="text-xs text-gray-400">—</span>
-                    ) : a.passed ? (
-                      <span className="text-green-600 font-medium text-sm">✅ Passed</span>
-                    ) : (
-                      <span className="text-red-500 font-medium text-sm">❌ Failed</span>
-                    )}
+                    {a.passed === null ? <span className="text-xs text-gray-400">—</span>
+                      : a.passed ? <span className="text-green-600 font-medium text-sm">✅ Passed</span>
+                      : <span className="text-red-500 font-medium text-sm">❌ Failed</span>}
                   </td>
-                  <td className="py-2.5 px-3 text-right text-xs text-gray-400">
-                    {formatTime(a.timeTakenSeconds)}
-                  </td>
+                  <td className="py-2.5 px-3 text-center text-xs text-gray-400">{formatTime(a.timeTakenSeconds)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
-
       {certificate && (
         <div className="bg-[#1E3A5F] rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <div className="flex items-center gap-3">
             <span className="text-3xl" aria-hidden>🥋</span>
             <div>
               <p className="text-white font-bold text-sm">Certified Ultimate Influencer™</p>
-              <p className="text-white/60 text-xs mt-0.5">
-                Issued {formatDate(certificate.issuedAt)} · Score: {Math.round(certificate.score)}%
-              </p>
-              <p className="text-white/40 text-xs font-mono mt-0.5">
-                ID: {certificate.certificateCode}
-              </p>
+              <p className="text-white/60 text-xs mt-0.5">Issued {formatDate(certificate.issuedAt)} · Score: {Math.round(certificate.score)}%</p>
+              <p className="text-white/40 text-xs font-mono mt-0.5">ID: {certificate.certificateCode}</p>
             </div>
           </div>
           <a
@@ -512,38 +1069,60 @@ function ExamHistory({
 // ---------------------------------------------------------------------------
 
 interface ActivityItem {
-  type:      "lesson" | "scenario" | "exam_pass" | "exam_fail" | "belt"
-  label:     string
-  date:      string
-  sortKey:   string
+  type: "lesson" | "scenario" | "exam_pass" | "exam_fail"
+  label: string; date: string; sortKey: string
 }
 
 function RecentActivity({ items }: { items: ActivityItem[] }) {
-  if (!items.length) {
-    return <p className="text-sm text-gray-400 py-4">No recent activity.</p>
+  if (!items.length) return <p className="text-sm text-gray-400 py-4">No recent activity.</p>
+  function icon(t: ActivityItem["type"]) {
+    return { lesson: "✅", scenario: "🎯", exam_pass: "📜", exam_fail: "📝" }[t]
   }
-
-  function icon(type: ActivityItem["type"]) {
-    switch (type) {
-      case "lesson":    return "✅"
-      case "scenario":  return "🎯"
-      case "exam_pass": return "📜"
-      case "exam_fail": return "📝"
-      case "belt":      return "🥋"
-    }
-  }
-
   return (
     <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
       {items.map((item, i) => (
         <div key={i} className="flex items-start gap-3 py-2 border-b border-gray-50 last:border-0">
           <span className="text-base leading-none mt-0.5 flex-shrink-0">{icon(item.type)}</span>
           <p className="text-sm text-gray-700 flex-1 leading-snug">{item.label}</p>
-          <span className="text-xs text-gray-400 flex-shrink-0 whitespace-nowrap">
-            {relativeDate(item.date)}
-          </span>
+          <span className="text-xs text-gray-400 flex-shrink-0 whitespace-nowrap">{relativeDate(item.date)}</span>
         </div>
       ))}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Section 6 — Action History
+// ---------------------------------------------------------------------------
+
+function ActionHistory({ logs }: { logs: UserDetailData["adminActionLogs"] }) {
+  if (!logs.length) {
+    return <p className="text-sm text-gray-400 py-4">No admin actions recorded for this user.</p>
+  }
+
+  return (
+    <div className="space-y-2">
+      {logs.map((log) => {
+        const badge = ACTION_BADGE[log.action] ?? { bg: "#F3F4F6", text: "#374151", label: log.action }
+        return (
+          <div
+            key={log.id}
+            className="flex flex-col sm:flex-row sm:items-start gap-2 py-3 border-b border-gray-50 last:border-0"
+          >
+            <span
+              className="text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 self-start"
+              style={{ background: badge.bg, color: badge.text }}
+            >
+              {badge.label}
+            </span>
+            <p className="text-sm text-gray-700 flex-1 leading-snug">{log.detail}</p>
+            <div className="flex-shrink-0 text-right">
+              <p className="text-xs text-gray-500">{log.adminName ?? "Admin"}</p>
+              <p className="text-xs text-gray-400">{relativeDate(log.createdAt)}</p>
+            </div>
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -553,147 +1132,96 @@ function RecentActivity({ items }: { items: ActivityItem[] }) {
 // ---------------------------------------------------------------------------
 
 export default function UserDetailView({ data }: { data: UserDetailData }) {
-  const { user, lessonProgress, scenarioAttempts, modules, examAttempts, examCertificate } = data
+  const { adminId, user, lessonProgress, scenarioAttempts, modules, examAttempts, examCertificate, adminActionLogs } = data
 
-  // ── Build module rows ──────────────────────────────────────────────────
+  // ── Module rows ──────────────────────────────────────────────────────
   const moduleRows = useMemo((): ModuleRow[] => {
-    const completedLessonIds = new Set(
-      lessonProgress.filter((lp) => lp.completed).map((lp) => lp.lessonId)
-    )
+    const completedLessonIds   = new Set(lessonProgress.filter((lp) => lp.completed).map((lp) => lp.lessonId))
     const attemptedScenarioIds = new Set(scenarioAttempts.map((sa) => sa.scenarioId))
-
-    // Latest completedAt per moduleId (from lessons)
-    const latestCompletionPerModule = new Map<string, string>()
+    const latestPerModule      = new Map<string, string>()
     for (const lp of lessonProgress) {
       if (lp.completed && lp.completedAt) {
-        const existing = latestCompletionPerModule.get(lp.moduleId)
-        if (!existing || lp.completedAt > existing) {
-          latestCompletionPerModule.set(lp.moduleId, lp.completedAt)
-        }
+        const e = latestPerModule.get(lp.moduleId)
+        if (!e || lp.completedAt > e) latestPerModule.set(lp.moduleId, lp.completedAt)
       }
     }
-
     return modules.map((mod) => {
-      const totalLessons      = mod.lessons.length
-      const completedLessons  = mod.lessons.filter((l) => completedLessonIds.has(l.id)).length
-      const totalScenarios    = mod.scenarios.length
+      const completedLessons   = mod.lessons.filter((l) => completedLessonIds.has(l.id)).length
       const attemptedScenarios = mod.scenarios.filter((s) => attemptedScenarioIds.has(s.id)).length
-
-      let status: ModuleStatus = "not_started"
-      const allLessonsDone     = totalLessons > 0 && completedLessons === totalLessons
-      const allScenariosDone   = totalScenarios === 0 || attemptedScenarios === totalScenarios
-      if (allLessonsDone && allScenariosDone) {
-        status = "complete"
-      } else if (completedLessons > 0 || attemptedScenarios > 0) {
-        status = "in_progress"
-      }
-
+      const allLessonsDone     = mod.lessons.length > 0 && completedLessons === mod.lessons.length
+      const allScenariosDone   = mod.scenarios.length === 0 || attemptedScenarios === mod.scenarios.length
+      const status: ModuleStatus =
+        allLessonsDone && allScenariosDone ? "complete"
+        : completedLessons > 0 || attemptedScenarios > 0 ? "in_progress"
+        : "not_started"
       return {
-        id:                mod.id,
-        moduleTitle:       mod.moduleTitle,
-        orderIndex:        mod.orderIndex,
-        beltLevel:         mod.beltLevel,
-        totalLessons,
-        completedLessons,
-        totalScenarios,
-        attemptedScenarios,
+        id: mod.id, moduleTitle: mod.moduleTitle, orderIndex: mod.orderIndex, beltLevel: mod.beltLevel,
+        totalLessons: mod.lessons.length, completedLessons,
+        totalScenarios: mod.scenarios.length, attemptedScenarios,
         status,
-        completedAt:       status === "complete" ? (latestCompletionPerModule.get(mod.id) ?? null) : null,
+        completedAt: status === "complete" ? (latestPerModule.get(mod.id) ?? null) : null,
       }
     })
   }, [lessonProgress, scenarioAttempts, modules])
 
-  // ── Computed summary stats ─────────────────────────────────────────────
   const completedModuleCount    = useMemo(() => moduleRows.filter((r) => r.status === "complete").length, [moduleRows])
   const uniqueScenariosAttempted = useMemo(() => new Set(scenarioAttempts.map((sa) => sa.scenarioId)).size, [scenarioAttempts])
 
-  // ── Build scenario performance rows ───────────────────────────────────
+  // ── Scenario rows ────────────────────────────────────────────────────
   const scenarioRows = useMemo((): ScenarioRow[] => {
-    const byScenario = new Map<string, {
-      title: string; moduleName: string; attempts: number; bestScore: number; lastAttempted: string
-    }>()
     const moduleMap = new Map(modules.map((m) => [m.id, m.moduleTitle]))
-
+    const byScenario = new Map<string, { title: string; moduleName: string; attempts: number; bestScore: number; lastAttempted: string }>()
     for (const sa of scenarioAttempts) {
-      const existing = byScenario.get(sa.scenarioId)
-      if (existing) {
-        existing.attempts++
-        if (sa.scoreEarned > existing.bestScore) existing.bestScore = sa.scoreEarned
-        if (sa.completedAt > existing.lastAttempted) existing.lastAttempted = sa.completedAt
+      const e = byScenario.get(sa.scenarioId)
+      if (e) {
+        e.attempts++
+        if (sa.scoreEarned > e.bestScore) e.bestScore = sa.scoreEarned
+        if (sa.completedAt > e.lastAttempted) e.lastAttempted = sa.completedAt
       } else {
         byScenario.set(sa.scenarioId, {
-          title:         sa.scenarioTitle ?? "Untitled Scenario",
-          moduleName:    moduleMap.get(sa.moduleId) ?? "—",
-          attempts:      1,
-          bestScore:     sa.scoreEarned,
-          lastAttempted: sa.completedAt,
+          title: sa.scenarioTitle ?? "Untitled", moduleName: moduleMap.get(sa.moduleId) ?? "—",
+          attempts: 1, bestScore: sa.scoreEarned, lastAttempted: sa.completedAt,
         })
       }
     }
-
     return Array.from(byScenario.entries())
-      .map(([scenarioId, v]) => ({
-        scenarioId,
-        scenarioTitle: v.title,
-        moduleName:    v.moduleName,
-        attempts:      v.attempts,
-        bestScore:     v.bestScore,
-        lastAttempted: v.lastAttempted,
-      }))
+      .map(([sid, v]) => ({ scenarioId: sid, scenarioTitle: v.title, moduleName: v.moduleName, attempts: v.attempts, bestScore: v.bestScore, lastAttempted: v.lastAttempted }))
       .sort((a, b) => b.lastAttempted.localeCompare(a.lastAttempted))
   }, [scenarioAttempts, modules])
 
-  // ── Build activity feed ────────────────────────────────────────────────
+  // ── Activity feed ────────────────────────────────────────────────────
   const activityFeed = useMemo((): ActivityItem[] => {
     const items: ActivityItem[] = []
-
-    // Completed lessons
     for (const lp of lessonProgress) {
       if (lp.completed && lp.completedAt) {
-        items.push({
-          type:    "lesson",
-          label:   `Completed lesson: "${lp.lessonTitle}"`,
-          date:    lp.completedAt,
-          sortKey: lp.completedAt,
-        })
+        items.push({ type: "lesson", label: `Completed lesson: "${lp.lessonTitle}"`, date: lp.completedAt, sortKey: lp.completedAt })
       }
     }
-
-    // Scenario attempts
     for (const sa of scenarioAttempts) {
-      items.push({
-        type:    "scenario",
-        label:   `Attempted scenario: "${sa.scenarioTitle ?? "Untitled"}" — scored ${Math.round(sa.scoreEarned)}`,
-        date:    sa.completedAt,
-        sortKey: sa.completedAt,
-      })
+      items.push({ type: "scenario", label: `Attempted scenario: "${sa.scenarioTitle ?? "Untitled"}" — scored ${Math.round(sa.scoreEarned)}`, date: sa.completedAt, sortKey: sa.completedAt })
     }
-
-    // Exam attempts
     for (const ea of examAttempts) {
       if (ea.completedAt && ea.score !== null) {
-        items.push({
-          type:    ea.passed ? "exam_pass" : "exam_fail",
-          label:   ea.passed
-            ? `Passed Black Belt exam — scored ${Math.round(ea.score)}%`
-            : `Attempted Black Belt exam — scored ${Math.round(ea.score)}%`,
-          date:    ea.completedAt,
-          sortKey: ea.completedAt,
-        })
+        items.push({ type: ea.passed ? "exam_pass" : "exam_fail", label: ea.passed ? `Passed Black Belt exam — scored ${Math.round(ea.score)}%` : `Attempted Black Belt exam — scored ${Math.round(ea.score)}%`, date: ea.completedAt, sortKey: ea.completedAt })
       }
     }
-
-    // Sort descending, take 20
     items.sort((a, b) => b.sortKey.localeCompare(a.sortKey))
     return items.slice(0, 20)
   }, [lessonProgress, scenarioAttempts, examAttempts])
 
-  // ── Render ─────────────────────────────────────────────────────────────
+  // ── Render ────────────────────────────────────────────────────────────
   return (
     <div className="max-w-5xl">
       <Header user={user} />
 
-      {/* Section 1 */}
+      {/* Admin Actions */}
+      <AdminActionsPanel
+        userId={user.id}
+        adminId={adminId}
+        user={user}
+      />
+
+      {/* Influence Journey */}
       <Panel className="mb-6">
         <InfluenceSummary
           user={user}
@@ -702,32 +1230,34 @@ export default function UserDetailView({ data }: { data: UserDetailData }) {
         />
       </Panel>
 
-      {/* Section 2 */}
+      {/* Module Breakdown */}
       <Panel className="mb-6">
         <SectionTitle>Module Progress Breakdown</SectionTitle>
         <ModuleBreakdown rows={moduleRows} />
       </Panel>
 
-      {/* Section 3 */}
+      {/* Scenario Performance */}
       <Panel className="mb-6">
         <SectionTitle>Scenario Performance</SectionTitle>
         <ScenarioPerformance rows={scenarioRows} />
       </Panel>
 
-      {/* Section 4 */}
+      {/* Exam History */}
       <Panel className="mb-6">
         <SectionTitle>Exam History</SectionTitle>
-        <ExamHistory
-          attempts={examAttempts}
-          certificate={examCertificate}
-          userId={user.id}
-        />
+        <ExamHistory attempts={examAttempts} certificate={examCertificate} userId={user.id} />
       </Panel>
 
-      {/* Section 5 */}
+      {/* Recent Activity */}
       <Panel className="mb-6">
         <SectionTitle>Recent Activity</SectionTitle>
         <RecentActivity items={activityFeed} />
+      </Panel>
+
+      {/* Action History */}
+      <Panel className="mb-6">
+        <SectionTitle>Action History</SectionTitle>
+        <ActionHistory logs={adminActionLogs} />
       </Panel>
     </div>
   )

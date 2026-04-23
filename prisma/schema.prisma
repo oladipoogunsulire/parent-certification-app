@@ -51,6 +51,8 @@ model User {
   influenceProfile     UserInfluenceProfile?
   examAttempts         ExamAttempt[]
   examCertificate      ExamCertificate?
+  adminActions         AdminActionLog[] @relation("AdminActions")
+  targetActions        AdminActionLog[] @relation("TargetActions")
 
   @@map("users")
 }
@@ -761,4 +763,22 @@ model ExamCertificate {
   attempt ExamAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
 
   @@map("exam_certificates")
+}
+
+// ==============================
+// ADMIN ACTION LOG
+// ==============================
+
+model AdminActionLog {
+  id           String   @id @default(cuid())
+  adminId      String
+  targetUserId String
+  action       String   // e.g. "BELT_ADJUSTED", "PROGRESS_RESET", "ACCOUNT_DEACTIVATED"
+  detail       String   // human-readable description
+  createdAt    DateTime @default(now())
+
+  admin      User @relation("AdminActions",  fields: [adminId],      references: [id])
+  targetUser User @relation("TargetActions", fields: [targetUserId], references: [id])
+
+  @@map("admin_action_logs")
 }

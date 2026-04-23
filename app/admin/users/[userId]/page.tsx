@@ -29,7 +29,7 @@ export default async function AdminUserDetailPage({
 
   const adminUser = await prisma.user.findUnique({
     where: { email: session.user.email },
-    select: { role: true },
+    select: { id: true, role: true },
   })
   if (!adminUser || adminUser.role !== "ADMIN") redirect("/dashboard")
 
@@ -42,6 +42,7 @@ export default async function AdminUserDetailPage({
     modulesResult,
     examAttemptsResult,
     examCertResult,
+    actionLogsResult,
   ] = await Promise.allSettled([
     // 1 — User with subscription + influence profile
     prisma.user.findUnique({
@@ -82,10 +83,7 @@ export default async function AdminUserDetailPage({
         completed:   true,
         completedAt: true,
         lesson: {
-          select: {
-            moduleId:    true,
-            lessonTitle: true,
-          },
+          select: { moduleId: true, lessonTitle: true },
         },
       },
     }),
@@ -98,10 +96,7 @@ export default async function AdminUserDetailPage({
         scoreEarned: true,
         completedAt: true,
         scenario: {
-          select: {
-            scenarioTitle: true,
-            moduleId:      true,
-          },
+          select: { scenarioTitle: true, moduleId: true },
         },
       },
       orderBy: { completedAt: "desc" },
@@ -115,14 +110,8 @@ export default async function AdminUserDetailPage({
         moduleTitle: true,
         orderIndex:  true,
         belt: { select: { beltLevel: true } },
-        lessons: {
-          where: { isActive: true },
-          select: { id: true, lessonTitle: true },
-        },
-        scenarios: {
-          where: { isActive: true },
-          select: { id: true, scenarioTitle: true },
-        },
+        lessons:   { where: { isActive: true }, select: { id: true, lessonTitle: true } },
+        scenarios: { where: { isActive: true }, select: { id: true, scenarioTitle: true } },
       },
       orderBy: { orderIndex: "asc" },
     }),
@@ -132,12 +121,12 @@ export default async function AdminUserDetailPage({
       where: { userId },
       orderBy: { attemptNumber: "asc" },
       select: {
-        id:              true,
-        attemptNumber:   true,
-        startedAt:       true,
-        completedAt:     true,
-        score:           true,
-        passed:          true,
+        id:               true,
+        attemptNumber:    true,
+        startedAt:        true,
+        completedAt:      true,
+        score:            true,
+        passed:           true,
         timeTakenSeconds: true,
       },
     }),
@@ -145,10 +134,29 @@ export default async function AdminUserDetailPage({
     // 6 — Exam certificate
     prisma.examCertificate.findUnique({
       where: { userId },
+      select: { certificateCode: true, issuedAt: true, score: true },
+    }),
+
+    // 7 — Admin action logs for this user
+    prisma.adminActionLog.findMany({
+      where: { targetUserId: userId },
+      orderBy: { createdAt: "desc" },
+      take: 20,
       select: {
-        certificateCode: true,
-        issuedAt:        true,
-        score:           true,
+        id:        true,
+        action:    true,
+        detail:    true,
+        createdAt: true,
+        admin: {
+          select: {
+            id:          true,
+            name:        true,
+            email:       true,
+            firstName:   true,
+            lastName:    true,
+            displayName: true,
+          },
+        },
       },
     }),
   ])
@@ -159,6 +167,8 @@ export default async function AdminUserDetailPage({
 
   // Serialize all Dates to ISO strings for client component
   const data: UserDetailData = {
+    adminId: adminUser.id,
+
     user: {
       id:           user.id,
       email:        user.email,
@@ -211,24 +221,20 @@ export default async function AdminUserDetailPage({
             moduleTitle: m.moduleTitle,
             orderIndex:  m.orderIndex,
             beltLevel:   m.belt.beltLevel,
-            lessons:     m.lessons.map((l) => ({
-              id: l.id, lessonTitle: l.lessonTitle,
-            })),
-            scenarios:   m.scenarios.map((s) => ({
-              id: s.id, scenarioTitle: s.scenarioTitle,
-            })),
+            lessons:     m.lessons.map((l) => ({ id: l.id, lessonTitle: l.lessonTitle })),
+            scenarios:   m.scenarios.map((s) => ({ id: s.id, scenarioTitle: s.scenarioTitle })),
           }))
         : [],
 
     examAttempts:
       examAttemptsResult.status === "fulfilled"
         ? examAttemptsResult.value.map((ea) => ({
-            id:              ea.id,
-            attemptNumber:   ea.attemptNumber,
-            startedAt:       ea.startedAt.toISOString(),
-            completedAt:     ea.completedAt?.toISOString() ?? null,
-            score:           ea.score,
-            passed:          ea.passed,
+            id:               ea.id,
+            attemptNumber:    ea.attemptNumber,
+            startedAt:        ea.startedAt.toISOString(),
+            completedAt:      ea.completedAt?.toISOString() ?? null,
+            score:            ea.score,
+            passed:           ea.passed,
             timeTakenSeconds: ea.timeTakenSeconds,
           }))
         : [],
@@ -241,6 +247,20 @@ export default async function AdminUserDetailPage({
             score:           examCertResult.value.score,
           }
         : null,
+
+    adminActionLogs:
+      actionLogsResult.status === "fulfilled"
+        ? actionLogsResult.value.map((log) => ({
+            id:        log.id,
+            action:    log.action,
+            detail:    log.detail,
+            createdAt: log.createdAt.toISOString(),
+            adminName: (() => {
+              const full = [log.admin.firstName, log.admin.lastName].filter(Boolean).join(" ").trim()
+              return log.admin.displayName ?? (full || log.admin.name) ?? log.admin.email
+            })(),
+          }))
+        : [],
   }
 
   return <UserDetailView data={data} />
