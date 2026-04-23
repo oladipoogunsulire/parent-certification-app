@@ -1,40 +1,21 @@
 import AnalyticsDashboard, { type AnalyticsData } from "./AnalyticsDashboard"
+import {
+  getUserGrowth,
+  getSubscriptionMetrics,
+  getModuleCompletionRates,
+  getScenarioPerformance,
+  getInfluenceScoreDistribution,
+  getBeltDistribution,
+  getExamMetrics,
+  getResourceDownloadStats,
+  getRecentActivity,
+} from "@/lib/analytics"
 
 export const metadata = {
   title: "Analytics — Admin Console",
 }
 
-// Fetch one analytics endpoint, return null on error
-async function safeFetch<T>(url: string, base: string): Promise<T | null> {
-  try {
-    const res = await fetch(`${base}${url}`, {
-      cache: "no-store",
-      headers: { Cookie: "" }, // Server-to-server; auth middleware handles cookies separately
-    })
-    if (!res.ok) return null
-    return res.json() as Promise<T>
-  } catch {
-    return null
-  }
-}
-
 export default async function AdminAnalyticsPage() {
-  // Next.js server components can use relative fetch with the internal base URL
-  // We query the API routes directly via Prisma in lib/analytics.ts to avoid
-  // the cookie-forwarding complexity of server-to-server fetches.
-  // Instead, import the analytics functions directly.
-  const {
-    getUserGrowth,
-    getSubscriptionMetrics,
-    getModuleCompletionRates,
-    getScenarioPerformance,
-    getInfluenceScoreDistribution,
-    getBeltDistribution,
-    getExamMetrics,
-    getResourceDownloadStats,
-    getRecentActivity,
-  } = await import("@/lib/analytics")
-
   const [
     userGrowthData,
     subscriptionData,
