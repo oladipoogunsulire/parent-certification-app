@@ -16,55 +16,65 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ userId: string }> }
 ) {
-  const admin = await adminGuard()
-  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  try {
+    const admin = await adminGuard()
+    if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
-  const { userId } = await params
+    const { userId } = await params
 
-  // Prevent admin from deactivating their own account
-  if (userId === admin.id) {
-    return NextResponse.json(
-      { error: "You cannot change the status of your own account." },
-      { status: 400 }
-    )
+    // Prevent admin from deactivating their own account
+    if (userId === admin.id) {
+      return NextResponse.json(
+        { error: "You cannot change the status of your own account." },
+        { status: 400 }
+      )
+    }
+
+    let body: { isActive?: unknown; reason?: unknown }
+    try {
+      body = await req.json()
+    } catch {
+      return NextResponse.json({ error: "Invalid request body." }, { status: 400 })
+    }
+    const { isActive, reason } = body as { isActive: boolean; reason: string }
+
+    if (typeof isActive !== "boolean") {
+      return NextResponse.json({ error: "isActive must be a boolean." }, { status: 400 })
+    }
+
+    if (!reason || reason.trim().length < 10) {
+      return NextResponse.json({ error: "Reason must be at least 10 characters." }, { status: 400 })
+    }
+
+    const targetUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true },
+    })
+    if (!targetUser) return NextResponse.json({ error: "User not found." }, { status: 404 })
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { isActive },
+    })
+
+    const action = isActive ? "ACCOUNT_ACTIVATED" : "ACCOUNT_DEACTIVATED"
+    const verb   = isActive ? "activated" : "deactivated"
+
+    await prisma.adminActionLog.create({
+      data: {
+        adminId:      admin.id,
+        targetUserId: userId,
+        action,
+        detail: `Account ${verb}. Reason: ${reason.trim()}`,
+      },
+    })
+
+    return NextResponse.json({
+      success: true,
+      message: `Account ${verb}.`,
+    })
+  } catch (err) {
+    console.error("[PATCH /api/admin/users/[userId]/status]", err)
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 })
   }
-
-  const body = await req.json()
-  const { isActive, reason } = body as { isActive: boolean; reason: string }
-
-  if (typeof isActive !== "boolean") {
-    return NextResponse.json({ error: "isActive must be a boolean." }, { status: 400 })
-  }
-
-  if (!reason || reason.trim().length < 10) {
-    return NextResponse.json({ error: "Reason must be at least 10 characters." }, { status: 400 })
-  }
-
-  const targetUser = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { id: true },
-  })
-  if (!targetUser) return NextResponse.json({ error: "User not found." }, { status: 404 })
-
-  await prisma.user.update({
-    where: { id: userId },
-    data: { isActive },
-  })
-
-  const action = isActive ? "ACCOUNT_ACTIVATED" : "ACCOUNT_DEACTIVATED"
-  const verb   = isActive ? "activated" : "deactivated"
-
-  await prisma.adminActionLog.create({
-    data: {
-      adminId:      admin.id,
-      targetUserId: userId,
-      action,
-      detail: `Account ${verb}. Reason: ${reason.trim()}`,
-    },
-  })
-
-  return NextResponse.json({
-    success: true,
-    message: `Account ${verb}.`,
-  })
 }
