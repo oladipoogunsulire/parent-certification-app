@@ -9,9 +9,10 @@ type Props = {
   email: string
   image: string | null
   isAdmin: boolean
+  children?: React.ReactNode
 }
 
-export default function UserMenu({ name, email, image, isAdmin }: Props) {
+export default function UserMenu({ name, email, image, isAdmin, children }: Props) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -91,6 +92,7 @@ export default function UserMenu({ name, email, image, isAdmin }: Props) {
               <User size={14} className="text-foreground/50" />
               My Profile
             </a>
+            {children}
             {isAdmin && (
               <a
                 href="/admin"

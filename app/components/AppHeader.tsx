@@ -1,13 +1,12 @@
-import { unstable_noStore as noStore } from "next/cache"
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import UserMenu from "./UserMenu"
 import MobileNavToggle from "./MobileNavToggle"
+import SubscriptionNavItem from "./SubscriptionNavItem"
 import { BLACK_BELT_EXAM_ENABLED } from "@/lib/feature-flags"
 import { getCompletedModuleCount } from "@/lib/module-completion"
 
 export default async function AppHeader() {
-  noStore()
   const session = await auth()
 
   let userProps: {
@@ -15,12 +14,10 @@ export default async function AppHeader() {
     email: string
     image: string | null
     isAdmin: boolean
-    hasSubscription: boolean
   } | null = null
   let showExamLink = false
 
   if (session?.user?.email) {
-    console.log("[AppHeader] session email:", session.user.email)
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
       select: {
@@ -41,28 +38,11 @@ export default async function AppHeader() {
         user.firstName ??
         null
 
-      // Check for any active or cancelling subscription
-      // Use session.user.id (from JWT) as a cross-check alongside user.id from DB lookup
-      console.log("[AppHeader] user.id from DB:", user.id)
-      console.log("[AppHeader] session.user.id from JWT:", session.user.id)
-
-      const activeSub = await prisma.userSubscription.findFirst({
-        where: {
-          userId: user.id,
-          status: { in: ["ACTIVE", "CANCELLING"] },
-        },
-        select: { id: true, status: true },
-      })
-
-      console.log("[AppHeader] activeSub result:", activeSub)
-      console.log("[AppHeader] hasSubscription:", !!activeSub)
-
       userProps = {
         name,
-        email:           user.email,
-        image:           user.image,
-        isAdmin:         user.role === "ADMIN",
-        hasSubscription: !!activeSub,
+        email:   user.email,
+        image:   user.image,
+        isAdmin: user.role === "ADMIN",
       }
 
       // Show Exam link when exam is enabled and user has unlocked it
@@ -95,7 +75,7 @@ export default async function AppHeader() {
             </a>
           )}
           {userProps ? (
-            <UserMenu {...userProps} />
+            <UserMenu {...userProps}><SubscriptionNavItem /></UserMenu>
           ) : (
             <a
               href="/login"
@@ -108,7 +88,7 @@ export default async function AppHeader() {
 
         {/* Mobile: show UserMenu (avatar) if logged in, then hamburger */}
         <div className="flex md:hidden items-center gap-2">
-          {userProps && <UserMenu {...userProps} />}
+          {userProps && <UserMenu {...userProps}><SubscriptionNavItem /></UserMenu>}
           <MobileNavToggle
             isLoggedIn={!!userProps}
             isAdmin={userProps?.isAdmin ?? false}
