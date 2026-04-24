@@ -169,6 +169,7 @@ model UserSubscription {
 
 enum SubscriptionStatus {
   ACTIVE
+  CANCELLING
   CANCELLED
   EXPIRED
   PAST_DUE
