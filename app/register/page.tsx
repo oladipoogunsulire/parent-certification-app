@@ -197,6 +197,18 @@ export default function RegisterPage() {
             </div>
           </div>
 
+          <p className="text-xs text-foreground/50 text-center">
+            By creating an account you agree to our{" "}
+            <a href="/terms" className="underline hover:text-foreground/70 transition-colors">
+              Terms of Service
+            </a>{" "}
+            and{" "}
+            <a href="/privacy" className="underline hover:text-foreground/70 transition-colors">
+              Privacy Policy
+            </a>
+            .
+          </p>
+
           <button
             type="submit"
             disabled={loading}

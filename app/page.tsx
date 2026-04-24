@@ -436,6 +436,8 @@ export default function HomePage() {
             <Link href="/subscribe" className="hover:text-white transition-colors">Pricing</Link>
             <Link href="/login" className="hover:text-white transition-colors">Sign In</Link>
             <Link href="/register" className="hover:text-white transition-colors">Register</Link>
+            <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
           </nav>
 
           {/* Copyright */}
