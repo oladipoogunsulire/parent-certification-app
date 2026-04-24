@@ -20,6 +20,7 @@ export default async function AppHeader() {
   let showExamLink = false
 
   if (session?.user?.email) {
+    console.log("[AppHeader] session email:", session.user.email)
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
       select: {
@@ -41,13 +42,20 @@ export default async function AppHeader() {
         null
 
       // Check for any active or cancelling subscription
+      // Use session.user.id (from JWT) as a cross-check alongside user.id from DB lookup
+      console.log("[AppHeader] user.id from DB:", user.id)
+      console.log("[AppHeader] session.user.id from JWT:", session.user.id)
+
       const activeSub = await prisma.userSubscription.findFirst({
         where: {
           userId: user.id,
           status: { in: ["ACTIVE", "CANCELLING"] },
         },
-        select: { id: true },
+        select: { id: true, status: true },
       })
+
+      console.log("[AppHeader] activeSub result:", activeSub)
+      console.log("[AppHeader] hasSubscription:", !!activeSub)
 
       userProps = {
         name,
