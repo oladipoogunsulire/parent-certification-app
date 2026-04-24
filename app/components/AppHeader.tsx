@@ -1,3 +1,4 @@
+import { unstable_noStore as noStore } from "next/cache"
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import UserMenu from "./UserMenu"
@@ -6,6 +7,7 @@ import { BLACK_BELT_EXAM_ENABLED } from "@/lib/feature-flags"
 import { getCompletedModuleCount } from "@/lib/module-completion"
 
 export default async function AppHeader() {
+  noStore()
   const session = await auth()
 
   let userProps: {
@@ -13,6 +15,7 @@ export default async function AppHeader() {
     email: string
     image: string | null
     isAdmin: boolean
+    hasSubscription: boolean
   } | null = null
   let showExamLink = false
 
@@ -37,11 +40,21 @@ export default async function AppHeader() {
         user.firstName ??
         null
 
+      // Check for any active or cancelling subscription
+      const activeSub = await prisma.userSubscription.findFirst({
+        where: {
+          userId: user.id,
+          status: { in: ["ACTIVE", "CANCELLING"] },
+        },
+        select: { id: true },
+      })
+
       userProps = {
         name,
-        email:   user.email,
-        image:   user.image,
-        isAdmin: user.role === "ADMIN",
+        email:           user.email,
+        image:           user.image,
+        isAdmin:         user.role === "ADMIN",
+        hasSubscription: !!activeSub,
       }
 
       // Show Exam link when exam is enabled and user has unlocked it
