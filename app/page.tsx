@@ -354,6 +354,7 @@ export default function HomePage() {
                     src={t.photo}
                     alt={t.name}
                     fill
+                    sizes="80px"
                     className="object-cover"
                   />
                 </div>
