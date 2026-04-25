@@ -1,8 +1,9 @@
 import Link from "next/link"
 import Image from "next/image"
 import HomeNav from "@/app/components/HomeNav"
+import FAQSection from "@/app/components/FAQSection"
 
-// ─── data ────────────────────────────────────────────────────────────────────
+// ─── data ─────────────────────────────────────────────────────────────────────
 
 const modules = [
   {
@@ -111,6 +112,45 @@ const modules = [
   },
 ]
 
+const testimonials = [
+  {
+    photo: "/image/family-testimonial-2.webp",
+    name: "Marcus T.",
+    location: "Father of 2, Toronto",
+    quote:
+      "I always thought I was a good parent. The Influence Score showed me where I was actually losing ground to outside influences. Module 3 changed everything for us.",
+  },
+  {
+    photo: "/image/family-testimonial-3.webp",
+    name: "Priya & David S.",
+    location: "Parents of 3, Vancouver",
+    quote:
+      "The scenarios are so realistic. For the first time I could see exactly how my responses were affecting my children's development. The DRG™ Framework is now part of our daily life.",
+  },
+  {
+    photo: "/image/family-testimonial-4.webp",
+    name: "Mei L.",
+    location: "Mother of 1, Calgary",
+    quote:
+      "Earning my Yellow Belt felt genuinely meaningful. This isn't just a course — it's a complete shift in how I see my role as a parent. Worth every minute.",
+  },
+]
+
+const monthlyFeatures = [
+  "Full access to all 10 modules",
+  "40+ real-life scenarios",
+  "Influence Score™ tracking",
+  "Belt progression system",
+  "Downloadable resources",
+  "Black Belt certification exam",
+]
+
+const annualFeatures = [
+  ...monthlyFeatures,
+  "2 months free",
+  "Priority support",
+]
+
 // ─── page ─────────────────────────────────────────────────────────────────────
 
 export default function HomePage() {
@@ -119,13 +159,16 @@ export default function HomePage() {
 
       <HomeNav />
 
-      {/* ── SECTION 2: Hero ───────────────────────────────────────────────── */}
+      {/* ── HERO ──────────────────────────────────────────────────────────────── */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16 md:py-24 flex flex-col-reverse md:flex-row items-center gap-12">
         {/* Copy */}
         <div className="flex-1 text-center md:text-left">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-primary leading-tight mb-6">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-primary leading-tight mb-3">
             You Are Your Child&apos;s Most<br className="hidden sm:block" /> Powerful Influence
           </h1>
+          <p className="text-foreground/60 text-base font-medium mb-5 max-w-xl mx-auto md:mx-0">
+            The only parenting platform that measures your influence — not just your effort
+          </p>
           <p className="text-foreground/70 text-lg leading-relaxed mb-8 max-w-xl mx-auto md:mx-0">
             Most parents react. The best ones lead with intention. The Influence Lab is where you train
             to become the parent your child needs — and the ultimate influence in their life.
@@ -165,7 +208,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── SECTION 3: Trust Strip ────────────────────────────────────────── */}
+      {/* ── TRUST STRIP ───────────────────────────────────────────────────────── */}
       <section className="bg-primary/5 border-y border-primary/10 py-4">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <p className="text-center text-sm text-primary font-medium flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-6 leading-relaxed">
@@ -178,7 +221,29 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── SECTION 4: What Is The Influence Lab ────────────────────────────── */}
+      {/* ── CREDIBILITY BAR ───────────────────────────────────────────────────── */}
+      <section className="bg-[#F8F9FA] border-b border-gray-200 py-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {[
+              { stat: "10",  label: "Influence Modules" },
+              { stat: "40+", label: "Real-Life Scenarios" },
+              { stat: "5",   label: "Belt Levels" },
+              { stat: "1",   label: "Certification" },
+            ].map((item, i, arr) => (
+              <div key={item.label} className="relative text-center">
+                {i < arr.length - 1 && (
+                  <div className="hidden md:block absolute right-0 top-1/2 -translate-y-1/2 w-px h-10 bg-gray-300" />
+                )}
+                <p className="text-4xl sm:text-5xl font-bold text-primary">{item.stat}</p>
+                <p className="text-sm text-foreground/55 mt-2">{item.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── WHAT IS THE INFLUENCE LAB ─────────────────────────────────────────── */}
       <section className="bg-white py-20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="max-w-3xl mx-auto text-center mb-14">
@@ -224,7 +289,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── SECTION 5: How It Works ───────────────────────────────────────── */}
+      {/* ── HOW IT WORKS ──────────────────────────────────────────────────────── */}
       <section id="how-it-works" className="bg-background py-20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-14">
@@ -266,8 +331,46 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── SECTION 6: Influence Score ────────────────────────────────────── */}
+      {/* ── TESTIMONIALS ──────────────────────────────────────────────────────── */}
       <section className="bg-white py-20">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="max-w-2xl mx-auto text-center mb-14">
+            <h2 className="text-3xl sm:text-4xl font-bold text-primary mb-3">
+              What Parents Are Saying
+            </h2>
+            <p className="text-foreground/60 text-lg">
+              Join families who are transforming their parenting approach
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {testimonials.map((t) => (
+              <div
+                key={t.name}
+                className="bg-white rounded-xl border border-gray-100 shadow-sm p-8 flex flex-col items-center text-center"
+              >
+                <div className="relative w-20 h-20 rounded-full overflow-hidden mb-4 shrink-0">
+                  <Image
+                    src={t.photo}
+                    alt={t.name}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <div className="text-[#F97316] text-lg mb-3 tracking-wide">★★★★★</div>
+                <p className="text-foreground/70 text-sm leading-relaxed italic mb-5">
+                  &ldquo;{t.quote}&rdquo;
+                </p>
+                <p className="font-bold text-foreground text-sm">{t.name}</p>
+                <p className="text-foreground/50 text-xs mt-0.5">{t.location}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── INFLUENCE SCORE ───────────────────────────────────────────────────── */}
+      <section className="bg-background py-20">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center">
           <h2 className="text-3xl sm:text-4xl font-bold text-primary mb-5">
             Where Are You On Your Influence Journey?
@@ -304,7 +407,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── SECTION 7: DRG™ Framework ─────────────────────────────────────── */}
+      {/* ── DRG™ FRAMEWORK ────────────────────────────────────────────────────── */}
       <section className="bg-primary py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
           <p className="text-accent text-sm font-semibold uppercase tracking-widest mb-3">Core Curriculum</p>
@@ -326,7 +429,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── SECTION 8: The Modules ────────────────────────────────────────── */}
+      {/* ── THE MODULES ───────────────────────────────────────────────────────── */}
       <section className="bg-background py-20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-5">
@@ -379,28 +482,81 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── SECTION 9: Pricing Teaser ─────────────────────────────────────── */}
+      {/* ── PRICING ───────────────────────────────────────────────────────────── */}
       <section className="bg-white py-20">
-        <div className="max-w-xl mx-auto px-4 sm:px-6 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold text-primary mb-5">
-            Invest In Your Most Important Role
-          </h2>
-          <p className="text-foreground/60 text-lg leading-relaxed mb-6">
-            Full access to all modules, scenarios, resources and your personal Influence Score dashboard.
-            Cancel anytime.
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold text-primary mb-3">
+              Simple, Transparent Pricing
+            </h2>
+            <p className="text-foreground/60 text-lg">Invest in your most important relationship</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+            {/* Monthly */}
+            <div className="bg-white border-2 border-primary rounded-2xl p-8 flex flex-col">
+              <p className="text-sm font-semibold text-primary uppercase tracking-wider mb-4">Monthly</p>
+              <div className="mb-1">
+                <span className="text-4xl font-bold text-primary">$29</span>
+                <span className="text-foreground/50 text-base ml-1">/month</span>
+              </div>
+              <p className="text-sm text-foreground/50 mb-6">Cancel anytime</p>
+              <ul className="space-y-3 mb-8 flex-1">
+                {monthlyFeatures.map((f) => (
+                  <li key={f} className="flex items-start gap-2 text-sm text-foreground/80">
+                    <span className="text-green-500 font-bold mt-0.5">✓</span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href="/register"
+                className="block text-center bg-primary text-white font-semibold py-3 px-6 rounded-lg hover:bg-primary/90 transition-colors"
+              >
+                Get started monthly
+              </Link>
+            </div>
+
+            {/* Annual */}
+            <div className="bg-primary rounded-2xl p-8 flex flex-col relative overflow-hidden">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm font-semibold text-white/80 uppercase tracking-wider">Annual</p>
+                <span className="bg-[#F97316] text-white text-xs font-bold px-3 py-1 rounded-full">
+                  Best value
+                </span>
+              </div>
+              <div className="mb-1">
+                <span className="text-4xl font-bold text-white">$249</span>
+                <span className="text-white/60 text-base ml-1">/year</span>
+              </div>
+              <p className="text-sm text-white/60 mb-6">Save $99 compared to monthly</p>
+              <ul className="space-y-3 mb-8 flex-1">
+                {annualFeatures.map((f) => (
+                  <li key={f} className="flex items-start gap-2 text-sm text-white/85">
+                    <span className="text-[#F97316] font-bold mt-0.5">✓</span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href="/register"
+                className="block text-center bg-white text-primary font-semibold py-3 px-6 rounded-lg hover:bg-white/90 transition-colors"
+              >
+                Get started annually
+              </Link>
+            </div>
+          </div>
+
+          <p className="text-center text-sm text-foreground/50 mt-6">
+            🔒 Secure payment via Stripe · Cancel anytime · No hidden fees
           </p>
-          <p className="text-5xl font-bold text-primary mb-2">$29</p>
-          <p className="text-foreground/50 text-base mb-8">/month — Plans from $29/month</p>
-          <Link
-            href="/subscribe"
-            className="inline-block bg-primary text-white font-semibold px-8 py-3 rounded-lg hover:bg-primary-hover transition-colors"
-          >
-            View Plans &amp; Get Started
-          </Link>
         </div>
       </section>
 
-      {/* ── SECTION 10: Final CTA Banner ──────────────────────────────────── */}
+      {/* ── FAQ ───────────────────────────────────────────────────────────────── */}
+      <FAQSection />
+
+      {/* ── FINAL CTA BANNER ──────────────────────────────────────────────────── */}
       <section className="bg-primary py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
           <h2 className="text-3xl sm:text-4xl font-bold text-white mb-5 leading-snug">
@@ -420,7 +576,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── SECTION 11: Footer ────────────────────────────────────────────── */}
+      {/* ── FOOTER ────────────────────────────────────────────────────────────── */}
       <footer className="bg-[#0f172a] py-10">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col items-center gap-5">
           {/* Brand */}
@@ -428,6 +584,40 @@ export default function HomePage() {
             <p className="text-white font-bold text-base">The Ultimate Influencer™</p>
             <p className="text-white/40 text-sm mt-1">The Premium Preventive Parenting Platform</p>
             <p className="text-white/40 text-sm">Parenting Today. Raising Tomorrow&apos;s Champions.</p>
+          </div>
+
+          {/* Contact */}
+          <a
+            href="mailto:hello@ultimateinfluencer.com"
+            className="text-white/50 text-sm hover:text-white transition-colors"
+          >
+            hello@ultimateinfluencer.com
+          </a>
+
+          {/* Social icons */}
+          <div className="flex items-center gap-4">
+            {/* Instagram */}
+            <a href="#" aria-label="Instagram" className="text-white/40 hover:text-white transition-colors">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                <circle cx="12" cy="12" r="4"/>
+                <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
+              </svg>
+            </a>
+            {/* Facebook */}
+            <a href="#" aria-label="Facebook" className="text-white/40 hover:text-white transition-colors">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+              </svg>
+            </a>
+            {/* LinkedIn */}
+            <a href="#" aria-label="LinkedIn" className="text-white/40 hover:text-white transition-colors">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
+                <rect x="2" y="9" width="4" height="12"/>
+                <circle cx="4" cy="4" r="2"/>
+              </svg>
+            </a>
           </div>
 
           {/* Links */}
