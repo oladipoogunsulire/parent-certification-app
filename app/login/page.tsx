@@ -41,9 +41,9 @@ function LoginForm() {
           <Image
             src="/image/logo-vertical.png"
             alt="The Ultimate Influencer™"
-            width={200}
-            height={100}
-            className="h-24 w-auto object-contain"
+            width={400}
+            height={200}
+            className="h-48 w-auto object-contain"
             priority
           />
         </div>

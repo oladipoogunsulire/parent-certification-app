@@ -167,9 +167,9 @@ export default function HomePage() {
             <Image
               src="/image/logo-horizontal.png"
               alt="The Ultimate Influencer™"
-              width={320}
-              height={80}
-              className="h-16 sm:h-20 w-auto object-contain"
+              width={640}
+              height={160}
+              className="h-32 sm:h-40 w-auto object-contain"
               priority
             />
           </div>
@@ -597,9 +597,9 @@ export default function HomePage() {
               <Image
                 src="/image/logo-vertical-white.png"
                 alt="The Ultimate Influencer™"
-                width={160}
-                height={160}
-                className="h-16 w-auto object-contain mx-auto"
+                width={480}
+                height={480}
+                className="h-32 w-auto object-contain mx-auto"
               />
             </div>
             <p className="text-white/40 text-sm">The Premium Preventive Parenting Platform</p>
