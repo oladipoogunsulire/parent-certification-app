@@ -582,8 +582,17 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col items-center gap-5">
           {/* Brand */}
           <div className="text-center">
-            <p className="text-white font-bold text-base">The Ultimate Influencer™</p>
-            <p className="text-white/40 text-sm mt-1">The Premium Preventive Parenting Platform</p>
+            {/* Logo on white pill — dark footer needs a light container */}
+            <div className="inline-block bg-white rounded-lg px-4 py-2 mb-3">
+              <Image
+                src="/image/logo-horizontal.png"
+                alt="The Ultimate Influencer™"
+                width={144}
+                height={36}
+                className="h-9 w-auto object-contain"
+              />
+            </div>
+            <p className="text-white/40 text-sm">The Premium Preventive Parenting Platform</p>
             <p className="text-white/40 text-sm">Parenting Today. Raising Tomorrow&apos;s Champions.</p>
           </div>
 

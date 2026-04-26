@@ -10,6 +10,9 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "The Ultimate Influencer™",
   description: "The Premium Preventive Parenting Platform — training parents to lead with intention.",
+  icons: {
+    icon: "/image/logo-vertical.png",
+  },
 };
 
 export default function RootLayout({

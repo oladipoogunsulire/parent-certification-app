@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { signIn } from "next-auth/react"
+import Image from "next/image"
 import { SECURITY_QUESTIONS } from "@/lib/security-questions"
 
 export default function RegisterPage() {
@@ -59,6 +60,16 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8">
       <div className="max-w-md w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6 sm:p-8">
+        <div className="flex justify-center mb-6">
+          <Image
+            src="/image/logo-vertical.png"
+            alt="The Ultimate Influencer™"
+            width={80}
+            height={80}
+            className="h-20 w-auto object-contain"
+            priority
+          />
+        </div>
         <h1 className="text-2xl font-bold text-primary mb-2">Create your account</h1>
         <p className="text-foreground/60 mb-8">Start your influence journey</p>
 

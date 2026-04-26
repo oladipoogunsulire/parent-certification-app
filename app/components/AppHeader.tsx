@@ -1,3 +1,4 @@
+import Image from "next/image"
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import UserMenu from "./UserMenu"
@@ -60,8 +61,15 @@ export default async function AppHeader() {
   return (
     <header className="relative bg-white border-b border-gray-100 shadow-sm">
       <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-3">
-        <a href="/" className="text-xl font-bold text-primary shrink-0">
-          The Ultimate Influencer™
+        <a href="/" className="shrink-0">
+          <Image
+            src="/image/logo-horizontal.png"
+            alt="The Ultimate Influencer™"
+            width={160}
+            height={40}
+            className="h-9 w-auto object-contain sm:h-10"
+            priority
+          />
         </a>
 
         {/* Desktop nav */}
