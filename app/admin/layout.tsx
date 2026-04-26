@@ -40,6 +40,9 @@ export default async function AdminLayout({
               <a href="/admin/exam" className="text-white/70 hover:text-white transition-colors min-h-[36px] flex items-center">
                 Exam
               </a>
+              <a href="/admin/content" className="text-white/70 hover:text-white transition-colors min-h-[36px] flex items-center">
+                Content
+              </a>
               <a href="/admin/analytics" className="text-white/70 hover:text-white transition-colors min-h-[36px] flex items-center">
                 Analytics
               </a>
