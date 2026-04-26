@@ -163,6 +163,17 @@ export default function HomePage() {
       <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16 md:py-24 flex flex-col-reverse md:flex-row items-center gap-12">
         {/* Copy */}
         <div className="flex-1 text-center md:text-left">
+          <div className="mb-6 flex justify-center md:justify-start">
+            <Image
+              src="/image/logo-horizontal.png"
+              alt="The Ultimate Influencer™"
+              width={320}
+              height={80}
+              className="h-16 sm:h-20 w-auto object-contain"
+              priority
+            />
+          </div>
+
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-primary leading-tight mb-3">
             You Are Your Child&apos;s Most<br className="hidden sm:block" /> Powerful Influence
           </h1>
@@ -582,14 +593,13 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col items-center gap-5">
           {/* Brand */}
           <div className="text-center">
-            {/* Logo on white pill — dark footer needs a light container */}
-            <div className="inline-block bg-white rounded-lg px-4 py-2 mb-3">
+            <div className="mb-3">
               <Image
-                src="/image/logo-horizontal.png"
+                src="/image/logo-vertical-white.png"
                 alt="The Ultimate Influencer™"
-                width={144}
-                height={36}
-                className="h-9 w-auto object-contain"
+                width={160}
+                height={160}
+                className="h-16 w-auto object-contain mx-auto"
               />
             </div>
             <p className="text-white/40 text-sm">The Premium Preventive Parenting Platform</p>
