@@ -103,12 +103,16 @@ export async function GET(
   try {
     // Cast needed: createElement returns FunctionComponentElement<Props>
     // but renderToBuffer expects ReactElement<DocumentProps>
+    const baseUrl = (process.env.NEXTAUTH_URL ?? "https://parent-certification-app.vercel.app").trim()
+    const logoUrl = `${baseUrl}/image/logo-horizontal.png`
+
     const element = createElement(CertificatePDF, {
       recipientName,
       issuedAt:        formatDate(certificate.issuedAt),
       score:           certificate.score,
       certificateCode: certificate.certificateCode,
       signatory,
+      logoUrl,
     }) as unknown as ReactElement<DocumentProps>
 
     const pdfBuffer = await renderToBuffer(element)

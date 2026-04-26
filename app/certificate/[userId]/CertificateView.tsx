@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Image from "next/image"
 
 // ---------------------------------------------------------------------------
 // Types
@@ -214,10 +215,15 @@ export default function CertificateView({
                 }}
               >
                 {/* Logo */}
-                <h1 className="font-extrabold tracking-tight text-[#1E3A5F]"
-                    style={{ fontSize: "clamp(14px, 2.8vw, 26px)", letterSpacing: "0.05em" }}>
-                  The Ultimate Influencer™
-                </h1>
+                <Image
+                  src="/image/logo-horizontal.png"
+                  alt="The Ultimate Influencer™"
+                  width={320}
+                  height={80}
+                  className="w-auto object-contain"
+                  style={{ maxWidth: "clamp(140px, 28vw, 280px)", height: "auto" }}
+                  priority
+                />
                 <p className="uppercase tracking-[0.25em] text-[#1E3A5F]"
                    style={{ fontSize: "clamp(6px, 1vw, 9px)", marginTop: "2px" }}>
                   Premium Preventive Parenting Platform

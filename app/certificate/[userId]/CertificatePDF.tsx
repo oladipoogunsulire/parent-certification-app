@@ -8,6 +8,7 @@ import {
   Page,
   Text,
   View,
+  Image,
   StyleSheet,
 } from "@react-pdf/renderer"
 
@@ -21,6 +22,7 @@ interface Props {
   score: number           // percentage e.g. 95
   certificateCode: string
   signatory: string       // e.g. "Dr. Tilis"
+  logoUrl: string         // absolute URL to logo-horizontal.png
 }
 
 // ---------------------------------------------------------------------------
@@ -61,13 +63,12 @@ const s = StyleSheet.create({
     paddingVertical: 20,
     backgroundColor: LIGHT,
   },
-  // Logo / header
-  logoText: {
-    fontSize: 20,
-    fontFamily: "Helvetica-Bold",
-    color: PRIMARY,
-    letterSpacing: 1,
-    textAlign: "center",
+  // Logo image
+  logoImage: {
+    width: 200,
+    height: 50,
+    alignSelf: "center",
+    objectFit: "contain",
   },
   subtitleText: {
     fontSize: 9,
@@ -191,6 +192,7 @@ export default function CertificatePDF({
   score,
   certificateCode,
   signatory,
+  logoUrl,
 }: Props) {
   return (
     <Document
@@ -202,7 +204,7 @@ export default function CertificatePDF({
         <View style={s.outerFrame}>
           <View style={s.innerFrame}>
             {/* Logo */}
-            <Text style={s.logoText}>The Ultimate Influencer™</Text>
+            <Image src={logoUrl} style={s.logoImage} />
             <Text style={s.subtitleText}>Premium Preventive Parenting Platform</Text>
 
             <View style={s.divider} />
