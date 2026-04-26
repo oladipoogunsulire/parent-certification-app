@@ -23,8 +23,9 @@ model User {
   firstName      String?
   lastName       String?
   displayName    String?
-  role           Role      @default(USER)
-  isActive       Boolean   @default(true)
+  role              Role      @default(USER)
+  isActive          Boolean   @default(true)
+  hasSeenOnboarding Boolean   @default(false)
   currentBelt    String?
   beltEarnedAt   DateTime?
   createdAt      DateTime  @default(now())

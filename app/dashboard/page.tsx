@@ -3,6 +3,7 @@ import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import AppHeader from "@/app/components/AppHeader"
 import SecurityQuestionsBanner from "@/app/components/SecurityQuestionsBanner"
+import OnboardingModal from "@/app/components/OnboardingModal"
 import { getRecentActivity } from "@/lib/progress"
 import { getUserInfluenceProfile } from "@/lib/influence-score"
 
@@ -23,7 +24,7 @@ export default async function DashboardPage() {
         },
       },
       subscriptions: {
-        where: { status: "ACTIVE" },
+        where: { status: { in: ["ACTIVE", "CANCELLING"] } },
         take: 1,
       },
     },
@@ -85,6 +86,8 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen bg-background">
       <AppHeader />
+
+      {!user?.hasSeenOnboarding && <OnboardingModal />}
 
       <main className="max-w-6xl mx-auto px-4 py-8">
         {/* Welcome */}
@@ -282,12 +285,16 @@ export default async function DashboardPage() {
             <p className="text-sm text-foreground/60">Scenarios Completed</p>
             <p className="text-2xl font-bold text-primary mt-1">{scenariosCompleted}</p>
           </div>
-          <div className="bg-white rounded-lg border border-gray-100 border-l-4 border-l-accent shadow-sm p-5">
+          <a
+            href="/subscription"
+            className="bg-white rounded-lg border border-gray-100 border-l-4 border-l-accent shadow-sm p-5 hover:shadow-md transition-shadow block"
+          >
             <p className="text-sm text-foreground/60">Account Status</p>
             <p className="text-2xl font-bold text-primary mt-1">
               {hasActiveSubscription ? "Active" : "Free"}
             </p>
-          </div>
+            <p className="text-xs text-foreground/40 mt-1">Manage →</p>
+          </a>
         </div>
       </main>
     </div>

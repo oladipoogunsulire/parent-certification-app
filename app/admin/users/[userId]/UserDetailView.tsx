@@ -18,9 +18,10 @@ export interface UserDetailData {
     displayName:  string | null
     image:        string | null
     role:         string
-    isActive:     boolean
-    currentBelt:  string | null
-    beltEarnedAt: string | null
+    isActive:          boolean
+    currentBelt:       string | null
+    beltEarnedAt:      string | null
+    hasSeenOnboarding: boolean
     createdAt:    string
     hasActiveSub: boolean
     influenceProfile: {
@@ -730,6 +731,64 @@ function RoleCard({
 }
 
 // ---------------------------------------------------------------------------
+// Card 5 — Onboarding Reset
+// ---------------------------------------------------------------------------
+
+function OnboardingCard({
+  userId,
+  hasSeenOnboarding,
+  onSuccess,
+  onError,
+}: {
+  userId:            string
+  hasSeenOnboarding: boolean
+  onSuccess:         (msg: string) => void
+  onError:           (msg: string) => void
+}) {
+  const router  = useRouter()
+  const [loading, setLoading] = useState(false)
+
+  async function doReset() {
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/reset-onboarding`, { method: "PATCH" })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error ?? "Failed")
+      onSuccess("Onboarding reset — user will see the welcome modal on next login.")
+      router.refresh()
+    } catch (e) {
+      onError(e instanceof Error ? e.message : "Something went wrong.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <ActionCard title="Onboarding">
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-gray-500">Status:</span>
+        {hasSeenOnboarding ? (
+          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-green-100 text-green-700">
+            Completed ✓
+          </span>
+        ) : (
+          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700">
+            Not yet seen
+          </span>
+        )}
+      </div>
+      <button
+        disabled={loading || !hasSeenOnboarding}
+        onClick={doReset}
+        className="w-full text-sm font-bold py-2 rounded-lg bg-[#1E3A5F] text-white hover:bg-[#162d4a] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+      >
+        {loading ? "Resetting…" : "Reset Onboarding"}
+      </button>
+    </ActionCard>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Admin Actions Panel
 // ---------------------------------------------------------------------------
 
@@ -794,6 +853,12 @@ function AdminActionsPanel({
             displayName={displayName}
             currentRole={user.role}
             isSelf={isSelf}
+            onSuccess={showSuccess}
+            onError={showError}
+          />
+          <OnboardingCard
+            userId={userId}
+            hasSeenOnboarding={user.hasSeenOnboarding}
             onSuccess={showSuccess}
             onError={showError}
           />
