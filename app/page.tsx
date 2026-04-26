@@ -163,13 +163,13 @@ export default function HomePage() {
       <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16 md:py-24 flex flex-col-reverse md:flex-row items-center gap-12">
         {/* Copy */}
         <div className="flex-1 text-center md:text-left">
-          <div className="mb-6 flex justify-center md:justify-start">
+          <div className="mb-6 flex justify-center">
             <Image
               src="/image/logo-horizontal.png"
               alt="The Ultimate Influencer™"
-              width={640}
-              height={160}
-              className="h-32 sm:h-40 w-auto object-contain"
+              width={800}
+              height={200}
+              className="h-40 sm:h-48 w-auto object-contain"
               priority
             />
           </div>

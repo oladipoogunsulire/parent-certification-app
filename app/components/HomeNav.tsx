@@ -2,16 +2,24 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 
 export default function HomeNav() {
   const [open, setOpen] = useState(false)
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-2 flex items-center justify-between gap-4">
         {/* Brand */}
-        <Link href="/" className="text-lg font-bold text-primary shrink-0">
-          The Ultimate Influencer™
+        <Link href="/" className="shrink-0">
+          <Image
+            src="/image/logo-horizontal.png"
+            alt="The Ultimate Influencer™"
+            width={320}
+            height={80}
+            className="h-16 w-auto object-contain sm:h-20"
+            priority
+          />
         </Link>
 
         {/* Desktop nav */}
