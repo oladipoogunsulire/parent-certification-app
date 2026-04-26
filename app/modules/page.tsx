@@ -173,10 +173,12 @@ export default async function ModulesPage() {
                     <h3 className="text-lg font-semibold text-foreground">
                       {belt.beltLevel} Belt
                     </h3>
-                    <p className="text-xs text-foreground/50">
-                      Pass threshold: {belt.passingThreshold}%
-                      {belt.expirable && " · Belt expires annually"}
-                    </p>
+                    {EXAMS_ENABLED && (
+                      <p className="text-xs text-foreground/50">
+                        Pass threshold: {belt.passingThreshold}%
+                        {belt.expirable && " · Belt expires annually"}
+                      </p>
+                    )}
                   </div>
                 </div>
                 {EXAMS_ENABLED && hasActiveSubscription && (
