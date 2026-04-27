@@ -8,9 +8,9 @@ export default function NotFound() {
         <Image
           src="/image/logo-horizontal.png"
           alt="The Ultimate Influencer™"
-          width={576}
-          height={144}
-          className="h-36 w-auto object-contain"
+          width={1152}
+          height={288}
+          className="h-36 w-full max-w-2xl object-contain"
           priority
         />
       </Link>

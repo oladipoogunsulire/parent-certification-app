@@ -9,15 +9,15 @@ export default function HomeNav() {
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-2 flex items-center justify-between gap-4">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
         {/* Brand */}
         <Link href="/" className="shrink-0">
           <Image
             src="/image/logo-horizontal.png"
             alt="The Ultimate Influencer™"
-            width={320}
-            height={80}
-            className="h-16 w-auto object-contain sm:h-20"
+            width={640}
+            height={160}
+            className="h-32 w-auto object-contain sm:h-40"
             priority
           />
         </Link>
