@@ -771,6 +771,19 @@ model ExamCertificate {
 // ADMIN ACTION LOG
 // ==============================
 
+// ==============================
+// PLATFORM SETTINGS
+// ==============================
+
+model PlatformSettings {
+  id                   String   @id @default(cuid())
+  influenceScoreLabels Json
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@map("platform_settings")
+}
+
 model AdminActionLog {
   id           String   @id @default(cuid())
   adminId      String
